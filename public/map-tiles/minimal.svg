@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Local light basemap tile">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f7fbf8"/>
+      <stop offset="1" stop-color="#e4f0ec"/>
+    </linearGradient>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="#9ab0aa" stroke-opacity="0.16" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#bg)"/>
+  <path d="M-30 198c45-18 84-22 117-7 34 15 59 11 90-16 25-22 56-28 100-16v110H-30Z" fill="#d6e6d8"/>
+  <path d="M20 172c42-15 77-12 105 8 31 22 66 20 104-8" fill="none" stroke="#9ab0aa" stroke-opacity="0.28" stroke-width="3"/>
+  <path d="M72 128c26-12 50-9 72 10 18 16 40 22 66 17" fill="none" stroke="#c4d0cb" stroke-opacity="0.52" stroke-width="2"/>
+  <path d="M0 232c35-12 67-11 95 3 35 18 70 18 105 0 20-10 41-13 65-8" fill="none" stroke="#ffffff" stroke-opacity="0.78" stroke-width="4"/>
+  <rect width="256" height="256" fill="url(#grid)"/>
+</svg>

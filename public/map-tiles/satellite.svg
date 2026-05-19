@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Local satellite-style basemap tile">
+  <defs>
+    <linearGradient id="water" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#123f57"/>
+      <stop offset="1" stop-color="#2c746f"/>
+    </linearGradient>
+    <linearGradient id="ridge" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#31583d"/>
+      <stop offset="0.52" stop-color="#6f7d49"/>
+      <stop offset="1" stop-color="#3d342d"/>
+    </linearGradient>
+    <pattern id="speckle" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="5" r="1.4" fill="#ffffff" opacity="0.08"/>
+      <circle cx="13" cy="12" r="1" fill="#ffffff" opacity="0.07"/>
+      <circle cx="9" cy="16" r="0.8" fill="#111c15" opacity="0.12"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#water)"/>
+  <path d="M-22 205c47-27 64-72 117-76 35-3 48 14 80 1 33-14 35-47 73-59 21-6 43-4 65 6v196H-22Z" fill="url(#ridge)"/>
+  <path d="M31 197c31-27 63-35 93-23 31 13 53 7 78-23 19-23 39-32 63-27" fill="none" stroke="#d7bf78" stroke-opacity="0.2" stroke-width="5"/>
+  <path d="M83 149c24-16 43-15 61 1 16 14 33 17 53 7" fill="none" stroke="#1f2f29" stroke-opacity="0.28" stroke-width="9"/>
+  <path d="M-7 218c39-16 75-14 108 7 30 19 62 16 96-8 19-13 41-17 67-12" fill="none" stroke="#8bc1a2" stroke-opacity="0.14" stroke-width="3"/>
+  <rect width="256" height="256" fill="url(#speckle)"/>
+</svg>

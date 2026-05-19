@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Local terrain basemap tile">
+  <defs>
+    <linearGradient id="sea" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#d8f1ee"/>
+      <stop offset="1" stop-color="#b7ded5"/>
+    </linearGradient>
+    <linearGradient id="land" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f0ead8"/>
+      <stop offset="0.55" stop-color="#cfe0bf"/>
+      <stop offset="1" stop-color="#a9c6a5"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#sea)"/>
+  <path d="M-24 196C20 172 30 137 69 125c35-11 53 12 82-5 31-18 23-56 67-70 25-8 47-2 70 13v215H-24Z" fill="url(#land)"/>
+  <path d="M24 184c30-20 54-25 82-14 35 14 57 5 84-22 19-19 37-25 62-19" fill="none" stroke="#6e9b7e" stroke-opacity="0.34" stroke-width="4"/>
+  <path d="M13 207c42-25 75-28 109-11 31 15 51 7 81-15 21-15 41-19 64-10" fill="none" stroke="#ffffff" stroke-opacity="0.36" stroke-width="2"/>
+  <path d="M58 149c22-16 44-18 67-7 28 13 47 8 69-15" fill="none" stroke="#487961" stroke-opacity="0.28" stroke-width="2"/>
+  <path d="M83 128c14-19 31-28 51-27 19 1 35 10 48 28" fill="none" stroke="#8f7d55" stroke-opacity="0.34" stroke-width="3"/>
+  <rect width="256" height="256" fill="url(#grid)"/>
+</svg>
