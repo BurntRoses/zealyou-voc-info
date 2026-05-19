@@ -9,6 +9,7 @@ import {
   Database,
   ExternalLink,
   MapPinned,
+  MonitorUp,
   Moon,
   Mountain,
   RefreshCcw,

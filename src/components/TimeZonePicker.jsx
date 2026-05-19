@@ -5,6 +5,10 @@ export function TimeZonePicker({ zones, value, clock, onChange }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const selected = zones.find((zone) => zone.value === value) ?? zones[0];
+  const selectZone = (nextZone) => {
+    onChange?.(nextZone);
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -23,7 +27,11 @@ export function TimeZonePicker({ zones, value, clock, onChange }) {
   }, [open]);
 
   return (
-    <div className={`timezone-picker ${open ? 'is-open' : ''}`} ref={rootRef}>
+    <div
+      className={`timezone-picker ${open ? 'is-open' : ''}`}
+      ref={rootRef}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
       <button
         className="timezone-trigger"
         type="button"
@@ -49,10 +57,12 @@ export function TimeZonePicker({ zones, value, clock, onChange }) {
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                onClick={() => {
-                  onChange?.(zone.value);
-                  setOpen(false);
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  selectZone(zone.value);
                 }}
+                onClick={() => selectZone(zone.value)}
               >
                 <span className="timezone-option-mark">
                   {isSelected ? <Check size={13} aria-hidden="true" /> : null}

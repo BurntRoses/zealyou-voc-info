@@ -312,6 +312,7 @@ p {
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   backdrop-filter: blur(18px) saturate(1.1);
+  overflow: visible;
 }
 
 .top-title {
@@ -350,7 +351,9 @@ p {
   flex-wrap: nowrap;
   gap: 4px;
   align-items: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding-block: 3px;
 }
 
 .top-center {
@@ -358,7 +361,7 @@ p {
   min-width: 0;
   align-items: center;
   gap: 6px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .top-timebar {
@@ -368,7 +371,7 @@ p {
   flex-wrap: nowrap;
   gap: 4px;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .top-timebar > span,
@@ -408,7 +411,7 @@ p {
 
 .timezone-picker {
   position: relative;
-  z-index: 32;
+  z-index: 80;
   flex: 0 0 auto;
 }
 
@@ -447,6 +450,7 @@ p {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
+  z-index: 120;
   display: grid;
   width: 236px;
   gap: 4px;
@@ -2254,10 +2258,23 @@ p {
   grid-column: 1 / -1;
 }
 
+.camera-preview {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .preview-media {
   display: grid;
   gap: 8px;
   padding: 14px;
+}
+
+.camera-preview .preview-media {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: minmax(220px, 1fr) auto;
 }
 
 .preview-media img,
@@ -2270,6 +2287,13 @@ p {
 
 .preview-media img {
   aspect-ratio: 16 / 10;
+}
+
+.camera-preview .preview-media img {
+  height: 100%;
+  min-height: clamp(220px, 24vw, 340px);
+  max-height: none;
+  object-fit: cover;
 }
 
 .preview-media span {
@@ -3922,6 +3946,12 @@ p {
     object-fit: cover;
   }
 
+  .camera-preview .preview-media img {
+    height: 100%;
+    min-height: clamp(220px, 24vw, 320px);
+    max-height: none;
+  }
+
   .home-map-preview {
     flex: 1;
     min-height: 0;
@@ -4111,6 +4141,12 @@ p {
     max-height: 136px;
   }
 
+  .camera-preview .preview-media img {
+    height: 100%;
+    min-height: clamp(220px, 34vh, 292px);
+    max-height: none;
+  }
+
   .preview-media span {
     display: none;
   }
@@ -4267,7 +4303,9 @@ p {
     flex-wrap: nowrap;
     gap: 5px;
     overflow-x: auto;
+    overflow-y: visible;
     padding-bottom: 2px;
+    padding-top: 4px;
     scrollbar-width: none;
   }
 
@@ -4288,7 +4326,8 @@ p {
 
   .top-timebar {
     flex-wrap: nowrap;
-    overflow-x: auto;
+    overflow-x: visible;
+    overflow-y: visible;
     scrollbar-width: none;
   }
 
