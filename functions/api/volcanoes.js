@@ -8,8 +8,9 @@ export async function onRequestGet({ request }) {
     const region = String(url.searchParams.get("region") ?? "").trim().toLowerCase();
     const limit = clampInteger(url.searchParams.get("limit"), 250, 1, 1000);
     const offset = clampInteger(url.searchParams.get("offset"), 0, 0, 100000);
+    const forceRefresh = url.searchParams.has("refresh");
 
-    const result = await getVolcanoes();
+    const result = await getVolcanoes({ forceRefresh });
     let volcanoes = result.volcanoes;
 
     if (query) {

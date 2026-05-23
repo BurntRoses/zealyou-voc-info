@@ -37,3 +37,22 @@ test('buildDashboardNotifications respects disabled channels and thresholds', ()
   assert.equal(events.some((event) => event.type === 'window'), false);
   assert.equal(events.some((event) => event.type === 'signal'), false);
 });
+
+test('buildDashboardNotifications creates high earthquake and hazard events', () => {
+  const dashboard = {
+    ...mockDashboards['hawaii-island'],
+    weatherAlerts: [
+      { id: 'tsunami-warning', event: 'Tsunami Warning', headline: 'Tsunami Warning for Hawaii coastal areas', url: 'https://example.com/tsunami' },
+      { id: 'flash-flood-warning', event: 'Flash Flood Warning', headline: 'Flash Flood Warning for Hawaii Island', url: 'https://example.com/flood' },
+    ],
+  };
+  const events = buildDashboardNotifications({
+    dashboard,
+    selectedVolcano: mockVolcanoes.find((volcano) => volcano.id === 'hawaii-island'),
+    preferences: defaultNotificationPreferences,
+  });
+
+  assert.ok(events.some((event) => event.type === 'earthquake' && event.tone === 'danger'));
+  assert.ok(events.some((event) => event.type === 'tsunami' && event.tone === 'danger'));
+  assert.ok(events.some((event) => event.type === 'weather' && event.tone === 'danger'));
+});

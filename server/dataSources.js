@@ -13,13 +13,13 @@ const NOAA_ALERTS_URL = "https://api.weather.gov/alerts/active";
 const NOAA_POINTS_URL = "https://api.weather.gov/points";
 
 const CACHE_TTL_MS = {
-  volcanoes: 15 * 60 * 1000,
-  hans: 5 * 60 * 1000,
-  earthquakes: 2 * 60 * 1000,
+  volcanoes: 5 * 60 * 1000,
+  hans: 2 * 60 * 1000,
+  earthquakes: 30 * 1000,
   gvp: 24 * 60 * 60 * 1000,
-  noaa: 5 * 60 * 1000,
+  noaa: 60 * 1000,
   noaaPoints: 12 * 60 * 60 * 1000,
-  noaaForecast: 10 * 60 * 1000,
+  noaaForecast: 3 * 60 * 1000,
 };
 
 const STALE_TTL_MS = {
@@ -34,6 +34,19 @@ const STALE_TTL_MS = {
 
 const HANS_EPISODE_LOOKBACK_DAYS = 120;
 const HANS_EPISODE_PAGE_COUNT = 4;
+const HAWAII_ISLAND_ID = "hawaii-island";
+const HAWAII_ISLAND_DEFAULT_RADIUS_KM = 100;
+const HAWAII_ISLAND_CENTER = { lat: 19.55, lon: -155.55 };
+const HAWAII_ISLAND_COMPONENT_IDS = ["kilauea", "mauna-loa"];
+const HAWAII_ISLAND_ALERT_POINTS = [
+  { id: "hawaii-island-center", name: "Hawaii Island", coordinates: HAWAII_ISLAND_CENTER },
+  { id: "kilauea-alert-point", name: "Kilauea", coordinates: { lat: 19.421, lon: -155.287 } },
+  { id: "mauna-loa-alert-point", name: "Mauna Loa", coordinates: { lat: 19.475, lon: -155.608 } },
+  { id: "hilo-alert-point", name: "Hilo", coordinates: { lat: 19.707, lon: -155.088 } },
+  { id: "kona-alert-point", name: "Kailua-Kona", coordinates: { lat: 19.641, lon: -155.996 } },
+];
+const ALERT_LEVEL_RANK = { UNASSIGNED: 0, NORMAL: 1, ADVISORY: 2, WATCH: 3, WARNING: 4 };
+const COLOR_CODE_RANK = { UNASSIGNED: 0, GREEN: 1, YELLOW: 2, ORANGE: 3, RED: 4 };
 
 const SOURCE_DEFINITIONS = {
   "usgs-vsc": {
@@ -169,11 +182,11 @@ async function fetchJson(url, options = {}) {
   }
 }
 
-async function cachedJson(key, fetcher, ttlMs, staleTtlMs) {
+async function cachedJson(key, fetcher, ttlMs, staleTtlMs, options = {}) {
   const cached = cache.get(key);
   const currentTime = Date.now();
 
-  if (cached && currentTime - cached.savedAt <= ttlMs) {
+  if (!options.forceRefresh && cached && currentTime - cached.savedAt <= ttlMs) {
     return {
       ok: true,
       data: cached.data,
@@ -311,6 +324,71 @@ const HVO_WEBCAMS = {
   },
 };
 
+function isHawaiiIslandId(id) {
+  const wanted = slugify(id);
+  return wanted === HAWAII_ISLAND_ID || wanted === "big-island" || wanted === "island-of-hawaii";
+}
+
+function strongestCode(items, field, rank) {
+  return (Array.isArray(items) ? items : []).reduce((best, item) => {
+    const value = normalizeString(item?.[field])?.toUpperCase();
+    if (!value) return best;
+    const bestRank = rank[best] ?? -1;
+    const valueRank = rank[value] ?? -1;
+    return valueRank > bestRank ? value : best;
+  }, null);
+}
+
+function latestTimestamp(items, fields) {
+  const values = [];
+  for (const item of Array.isArray(items) ? items : []) {
+    for (const field of fields) {
+      const value = normalizeString(item?.[field]);
+      const time = Date.parse(value ?? "");
+      if (Number.isFinite(time)) values.push({ value, time });
+    }
+  }
+  values.sort((left, right) => right.time - left.time);
+  return values[0]?.value ?? null;
+}
+
+function buildHawaiiIslandVolcano(volcanoes = []) {
+  const components = HAWAII_ISLAND_COMPONENT_IDS
+    .map((id) => findVolcano(volcanoes, id))
+    .filter(Boolean);
+  const alertLevel = strongestCode(components, "alertLevel", ALERT_LEVEL_RANK);
+  const colorCode = strongestCode(components, "colorCode", COLOR_CODE_RANK);
+  const synopsis = components
+    .map((volcano) => `${volcano.name}: ${volcano.alertLevel ?? "UNKNOWN"} / ${volcano.colorCode ?? "UNKNOWN"}`)
+    .join("; ");
+
+  return {
+    id: HAWAII_ISLAND_ID,
+    vnum: HAWAII_ISLAND_ID,
+    volcanoCd: null,
+    slug: HAWAII_ISLAND_ID,
+    name: "Hawaii Island Volcanoes",
+    coordinates: { ...HAWAII_ISLAND_CENTER },
+    observatory: "hvo",
+    region: "Hawaii",
+    officialUrl: "https://www.usgs.gov/observatories/hvo",
+    imageUrl: components.find((volcano) => volcano.imageUrl)?.imageUrl ?? null,
+    statusIconUrl: components.find((volcano) => volcano.statusIconUrl)?.statusIconUrl ?? null,
+    notice: {
+      id: `composite-${components.map((volcano) => volcano.notice?.id).filter(Boolean).join("-") || "hvo"}`,
+      synopsis: synopsis || "Composite Hawaii Island volcano status.",
+      url: "https://www.usgs.gov/observatories/hvo",
+    },
+    alertLevel,
+    colorCode,
+    alertDate: latestTimestamp(components, ["alertDate"]),
+    colorDate: latestTimestamp(components, ["colorDate"]),
+    nvewsThreat: components.find((volcano) => volcano.nvewsThreat)?.nvewsThreat ?? null,
+    components: components.map((volcano) => volcano.id),
+    sourceIds: ["usgs-vsc"],
+  };
+}
+
 function volcanoKey(volcano) {
   const value = slugify(`${volcano?.slug ?? ""} ${volcano?.name ?? ""} ${volcano?.vnum ?? ""}`);
   if (value.includes("mauna") || value.includes("332020")) return "mauna-loa";
@@ -324,6 +402,15 @@ function webcamImageUrl(code, mode = "live") {
 }
 
 function getOfficialLinks(volcano) {
+  if (isHawaiiIslandId(volcano?.id ?? volcano?.slug ?? volcano?.name)) {
+    return {
+      volcano: "https://www.usgs.gov/observatories/hvo",
+      hvoUpdates: "https://www.usgs.gov/observatories/hvo/volcano-updates",
+      hvoWebcams: "https://www.usgs.gov/observatories/hvo/multimedia/webcams",
+      npsAlerts: "https://www.nps.gov/havo/planyourvisit/conditions.htm",
+      hans: "https://volcanoes.usgs.gov/hans-public/",
+    };
+  }
   const key = volcanoKey(volcano);
   const base = OFFICIAL_LINKS[key] ?? OFFICIAL_LINKS.kilauea;
   return {
@@ -1139,12 +1226,13 @@ function buildNwsPointsUrl(coordinates) {
   return `${NOAA_POINTS_URL}/${coordinates.lat.toFixed(4)},${coordinates.lon.toFixed(4)}`;
 }
 
-export async function getVolcanoes() {
+export async function getVolcanoes(options = {}) {
   const result = await cachedJson(
     "usgs-vsc:volcanoes",
     () => fetchJson(VSC_VOLCANOES_URL),
     CACHE_TTL_MS.volcanoes,
     STALE_TTL_MS.volcanoes,
+    options,
   );
   const volcanoes = (Array.isArray(result.data?.features)
     ? result.data.features
@@ -1152,9 +1240,10 @@ export async function getVolcanoes() {
   )
     .map(normalizeVolcanoFeature)
     .filter((volcano) => volcano.id && volcano.name);
+  const hawaiiIsland = buildHawaiiIslandVolcano(volcanoes);
 
   return {
-    volcanoes,
+    volcanoes: [hawaiiIsland, ...volcanoes],
     sources: [
       sourceResult("usgs-vsc", VSC_VOLCANOES_URL, result, [
         "Primary volcano inventory, status, alert/color codes, and current notice synopsis.",
@@ -1178,7 +1267,7 @@ export function findVolcano(volcanoes, id) {
   );
 }
 
-export async function getHansNotices(volcano, days) {
+export async function getHansNotices(volcano, days, options = {}) {
   const endUnixtime = Math.floor(Date.now() / 1000);
   const body = {
     obsAbbr: volcano.observatory ?? "",
@@ -1215,6 +1304,7 @@ export async function getHansNotices(volcano, days) {
     },
     CACHE_TTL_MS.hans,
     STALE_TTL_MS.hans,
+    options,
   );
   const notices = Array.isArray(result.data?.noticeData)
     ? result.data.noticeData.map(normalizeHansNotice)
@@ -1237,7 +1327,7 @@ export async function getHansNotices(volcano, days) {
   };
 }
 
-export async function getEarthquakes(volcano, days, radiusKm) {
+export async function getEarthquakes(volcano, days, radiusKm, options = {}) {
   if (!volcano.coordinates) {
     return {
       earthquakes: normalizeEarthquakes(null, days, radiusKm),
@@ -1260,6 +1350,7 @@ export async function getEarthquakes(volcano, days, radiusKm) {
     () => fetchJson(url),
     CACHE_TTL_MS.earthquakes,
     STALE_TTL_MS.earthquakes,
+    options,
   );
 
   return {
@@ -1278,7 +1369,7 @@ export async function getEarthquakes(volcano, days, radiusKm) {
   };
 }
 
-export async function getGvpHistory(volcano) {
+export async function getGvpHistory(volcano, options = {}) {
   if (!volcano.vnum || !Number.isFinite(Number(volcano.vnum))) {
     return {
       history: null,
@@ -1301,6 +1392,7 @@ export async function getGvpHistory(volcano) {
     () => fetchJson(url),
     CACHE_TTL_MS.gvp,
     STALE_TTL_MS.gvp,
+    options,
   );
   const feature = Array.isArray(result.data?.features)
     ? result.data.features[0]
@@ -1322,7 +1414,7 @@ export async function getGvpHistory(volcano) {
   };
 }
 
-export async function getGvpEruptions(volcano) {
+export async function getGvpEruptions(volcano, options = {}) {
   if (!volcano.vnum || !Number.isFinite(Number(volcano.vnum))) {
     return {
       eruptions: [],
@@ -1354,6 +1446,7 @@ export async function getGvpEruptions(volcano) {
     () => fetchJson(url),
     CACHE_TTL_MS.gvp,
     STALE_TTL_MS.gvp,
+    options,
   );
   const eruptions = (Array.isArray(result.data?.features) ? result.data.features : [])
     .map((feature) => {
@@ -1393,7 +1486,7 @@ export async function getGvpEruptions(volcano) {
   };
 }
 
-export async function getNoaaAlerts(volcano) {
+export async function getNoaaAlerts(volcano, options = {}) {
   if (!volcano.coordinates) {
     return {
       alerts: [],
@@ -1408,6 +1501,7 @@ export async function getNoaaAlerts(volcano) {
     () => fetchJson(url),
     CACHE_TTL_MS.noaa,
     STALE_TTL_MS.noaa,
+    options,
   );
 
   return {
@@ -1426,7 +1520,7 @@ export async function getNoaaAlerts(volcano) {
   };
 }
 
-export async function getNwsWeather(volcano) {
+export async function getNwsWeather(volcano, options = {}) {
   if (!volcano.coordinates) {
     return {
       weather: {
@@ -1453,6 +1547,7 @@ export async function getNwsWeather(volcano) {
     () => fetchJson(pointUrl),
     CACHE_TTL_MS.noaaPoints,
     STALE_TTL_MS.noaaPoints,
+    options,
   );
   const point = pointResult.data ? normalizeNwsPoint(pointResult.data) : null;
   const forecastUrl = point?.forecastUrl;
@@ -1465,6 +1560,7 @@ export async function getNwsWeather(volcano) {
           () => fetchJson(forecastUrl),
           CACHE_TTL_MS.noaaForecast,
           STALE_TTL_MS.noaaForecast,
+          options,
         )
       : Promise.resolve(null),
     hourlyUrl
@@ -1473,6 +1569,7 @@ export async function getNwsWeather(volcano) {
           () => fetchJson(hourlyUrl),
           CACHE_TTL_MS.noaaForecast,
           STALE_TTL_MS.noaaForecast,
+          options,
         )
       : Promise.resolve(null),
   ]);
@@ -1537,11 +1634,184 @@ export async function getNwsWeather(volcano) {
   };
 }
 
+function dedupeBy(items, keyFn) {
+  const map = new Map();
+  for (const item of Array.isArray(items) ? items : []) {
+    const key = keyFn(item);
+    if (!key) continue;
+    if (!map.has(key)) map.set(key, item);
+  }
+  return Array.from(map.values());
+}
+
+function mergeDiagnostics(results) {
+  const errors = results.flatMap((result) => result?.diagnostics?.errors ?? []);
+  return {
+    degraded: results.some((result) => result?.diagnostics?.degraded),
+    errors,
+  };
+}
+
+async function getNoaaAlertsForHawaiiIsland(options = {}) {
+  const results = await Promise.all(HAWAII_ISLAND_ALERT_POINTS.map((point) => getNoaaAlerts(point, options)));
+  const alerts = dedupeBy(
+    results.flatMap((result) => result.alerts ?? []),
+    (alert) => alert?.id ?? `${alert?.event ?? ""}:${alert?.headline ?? ""}:${alert?.effective ?? ""}`,
+  );
+
+  return {
+    alerts,
+    sources: results.flatMap((result) => result.sources ?? []),
+    diagnostics: mergeDiagnostics(results),
+  };
+}
+
+function mergeHistoryProfiles(profiles) {
+  const components = profiles
+    .map((result) => result?.history)
+    .filter(Boolean);
+  const eruptionYears = components
+    .map((profile) => profile?.lastEruptionYear)
+    .filter((year) => Number.isFinite(year));
+  return {
+    profile: components[0] ?? null,
+    components,
+    lastEruptionYear: eruptionYears.length ? Math.max(...eruptionYears) : null,
+    evidenceCategory: components.find((profile) => profile?.evidenceCategory)?.evidenceCategory ?? null,
+    geologicalSummary: components
+      .map((profile) => profile?.geologicalSummary)
+      .filter(Boolean)
+      .join("\n\n"),
+  };
+}
+
+function sortNotices(notices) {
+  return [...notices].sort((left, right) => {
+    const rightTime = Date.parse(right.sentUtc ?? "") || Number(right.sentUnixtime ?? 0) * 1000 || 0;
+    const leftTime = Date.parse(left.sentUtc ?? "") || Number(left.sentUnixtime ?? 0) * 1000 || 0;
+    return rightTime - leftTime;
+  });
+}
+
+async function getHawaiiIslandDashboardData(volcanoList, options = {}) {
+  const days = options.days ?? 7;
+  const radiusKm = options.radiusKm ?? HAWAII_ISLAND_DEFAULT_RADIUS_KM;
+  const includeNoaa = options.includeNoaa ?? true;
+  const sourceOptions = { forceRefresh: Boolean(options.forceRefresh) };
+  const volcano = buildHawaiiIslandVolcano(volcanoList);
+  const componentVolcanoes = HAWAII_ISLAND_COMPONENT_IDS
+    .map((id) => findVolcano(volcanoList, id))
+    .filter(Boolean);
+  const hansDays = Math.max(days, options.episodeDays ?? HANS_EPISODE_LOOKBACK_DAYS);
+
+  const [
+    hansResults,
+    earthquakeResult,
+    historyResults,
+    eruptionResults,
+    noaa,
+    weather,
+  ] = await Promise.all([
+    Promise.all(componentVolcanoes.map((item) => getHansNotices(item, hansDays, sourceOptions))),
+    getEarthquakes(volcano, days, radiusKm, sourceOptions),
+    Promise.all(componentVolcanoes.map((item) => getGvpHistory(item, sourceOptions))),
+    Promise.all(componentVolcanoes.map((item) => getGvpEruptions(item, sourceOptions))),
+    includeNoaa
+      ? getNoaaAlertsForHawaiiIsland(sourceOptions)
+      : Promise.resolve({ alerts: [], sources: [], diagnostics: { degraded: false, errors: [] } }),
+    includeNoaa
+      ? getNwsWeather(volcano, sourceOptions)
+      : Promise.resolve({
+          weather: {
+            point: null,
+            forecast: { updatedAt: null, units: null, periods: [] },
+            hourly: { updatedAt: null, units: null, periods: [] },
+          },
+          sources: [],
+          diagnostics: { degraded: false, errors: [] },
+        }),
+  ]);
+  const notices = sortNotices(hansResults.flatMap((result) => result.notices ?? []));
+  const officialEpisodes = normalizeOfficialEpisodes(notices);
+  const historyProfile = mergeHistoryProfiles(historyResults);
+  const eruptions = eruptionResults.flatMap((result) => result.eruptions ?? []);
+  const travelContext = buildTravelContext({
+    volcano,
+    notices,
+    officialEpisodes,
+    weather: weather.weather,
+    weatherAlerts: noaa.alerts,
+    earthquakes: earthquakeResult.earthquakes,
+    radiusKm,
+    days,
+  });
+  const sourceGroups = [
+    ...hansResults,
+    earthquakeResult,
+    ...historyResults,
+    ...eruptionResults,
+    noaa,
+    weather,
+  ];
+  const sources = [
+    ...sourceGroups.flatMap((result) => result.sources ?? []),
+    referenceSource("hvo-webcams", travelContext.officialLinks.hvoWebcams, [
+      "Official HVO webcam page and static camera image endpoints.",
+    ]),
+    referenceSource("nps-havo", travelContext.officialLinks.npsAlerts, [
+      "National Park Service conditions and closure page for visitor verification.",
+    ]),
+  ];
+  const diagnostics = mergeDiagnostics(sourceGroups);
+
+  return {
+    found: true,
+    volcano,
+    officialNotices: {
+      total: hansResults.reduce((total, result) => total + (result.total ?? 0), 0),
+      items: notices,
+    },
+    earthquakes: earthquakeResult.earthquakes,
+    history: {
+      ...historyProfile,
+      episodes: officialEpisodes,
+      eruptions,
+    },
+    weatherAlerts: noaa.alerts,
+    weather: weather.weather,
+    travelContext,
+    sources,
+    diagnostics: {
+      degraded: diagnostics.degraded || sources.some((source) => ["failed", "stale"].includes(source.status)),
+      errors: diagnostics.errors,
+    },
+  };
+}
+
 export async function getDashboardData(id, options = {}) {
   const days = options.days ?? 7;
-  const radiusKm = options.radiusKm ?? 50;
+  const radiusKm = options.radiusKm ?? HAWAII_ISLAND_DEFAULT_RADIUS_KM;
   const includeNoaa = options.includeNoaa ?? true;
-  const volcanoList = await getVolcanoes();
+  const sourceOptions = { forceRefresh: Boolean(options.forceRefresh) };
+  const volcanoList = await getVolcanoes(sourceOptions);
+
+  if (isHawaiiIslandId(id)) {
+    const dashboard = await getHawaiiIslandDashboardData(volcanoList.volcanoes, {
+      ...options,
+      days,
+      radiusKm,
+      includeNoaa,
+    });
+    return {
+      ...dashboard,
+      sources: [...volcanoList.sources, ...dashboard.sources],
+      diagnostics: {
+        degraded: volcanoList.diagnostics.degraded || dashboard.diagnostics.degraded,
+        errors: [...volcanoList.diagnostics.errors, ...dashboard.diagnostics.errors],
+      },
+    };
+  }
+
   const volcano = findVolcano(volcanoList.volcanoes, id);
 
   if (!volcano) {
@@ -1566,19 +1836,19 @@ export async function getDashboardData(id, options = {}) {
   const hansDays = Math.max(days, options.episodeDays ?? HANS_EPISODE_LOOKBACK_DAYS);
   const [hans, earthquakes, historyProfile, eruptions, noaa, weather] =
     await Promise.all([
-      getHansNotices(volcano, hansDays),
-      getEarthquakes(volcano, days, radiusKm),
-      getGvpHistory(volcano),
-      getGvpEruptions(volcano),
+      getHansNotices(volcano, hansDays, sourceOptions),
+      getEarthquakes(volcano, days, radiusKm, sourceOptions),
+      getGvpHistory(volcano, sourceOptions),
+      getGvpEruptions(volcano, sourceOptions),
       includeNoaa
-        ? getNoaaAlerts(volcano)
+        ? getNoaaAlerts(volcano, sourceOptions)
         : Promise.resolve({
             alerts: [],
             sources: [],
             diagnostics: { degraded: false, errors: [] },
           }),
       includeNoaa
-        ? getNwsWeather(volcano)
+        ? getNwsWeather(volcano, sourceOptions)
         : Promise.resolve({
             weather: {
               point: null,

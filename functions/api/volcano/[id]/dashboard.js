@@ -8,13 +8,15 @@ export async function onRequestGet({ request, params }) {
 
   try {
     const days = clampInteger(url.searchParams.get("days"), 7, 1, 30);
-    const radiusKm = clampInteger(url.searchParams.get("radiusKm"), 50, 5, 200);
+    const radiusKm = clampInteger(url.searchParams.get("radiusKm"), 100, 5, 200);
     const includeNoaa = String(url.searchParams.get("noaa") ?? "1") !== "0";
+    const forceRefresh = url.searchParams.has("refresh");
 
     const dashboard = await getDashboardData(id, {
       days,
       radiusKm,
       includeNoaa,
+      forceRefresh,
     });
 
     if (!dashboard.found) {
@@ -59,6 +61,7 @@ export async function onRequestGet({ request, params }) {
         days,
         radiusKm,
         includeNoaa,
+        forceRefresh,
         degraded: dashboard.diagnostics.degraded,
       },
       sources: dashboard.sources,

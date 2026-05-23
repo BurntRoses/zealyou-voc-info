@@ -15,7 +15,8 @@ import { useStoredState } from './hooks/useStoredState.js';
 import { useUrlState } from './hooks/useUrlState.js';
 
 const preferenceKey = 'voc-info-volcano-preferences-v2';
-const primaryVolcanoId = 'kilauea';
+const primaryVolcanoId = 'hawaii-island';
+const liveRefreshMs = 60_000;
 const CamerasView = lazy(() => import('./features/cameras/CamerasView.jsx').then((module) => ({ default: module.CamerasView })));
 const MapView = lazy(() => import('./features/map/MapView.jsx').then((module) => ({ default: module.MapView })));
 const TrendsView = lazy(() => import('./features/trends/TrendsView.jsx').then((module) => ({ default: module.TrendsView })));
@@ -37,6 +38,13 @@ function App() {
     includeNoaa: urlState.includeNoaa,
     refreshKey,
   });
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setRefreshKey((value) => value + 1);
+    }, liveRefreshMs);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (urlState.selectedVolcanoId !== primaryVolcanoId) {

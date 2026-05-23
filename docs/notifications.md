@@ -1,31 +1,25 @@
-# 页面内通知
+# In-page Notifications
 
-本项目现在只保留页面内通知，不再提供邮箱通知、后台订阅、邮件退订或定时邮件派发。
+This project keeps notifications inside the browser only. It does not send
+email, manage server-side subscribers, or run background push delivery.
 
-页面内通知包含：
-
-- 顶部铃铛未读数。
-- 通知面板记录。
-- 页面浮层提示。
-- 可配置的通知类型和活动信号阈值。
-
-## 触发条件
-
-默认监听：
-
-- USGS/HVO 火山警戒或航空颜色达到注意、观察、警告等级。
-- EP 官方窗口或模型候选窗口变化。
-- 活动信号达到用户设置阈值。
-- NOAA/NWS 天气提醒。
-- 可选的数据源降级提醒。
-
-## 存储
-
-通知设置和记录只保存在浏览器 `localStorage` 中：
+The notification center stores preferences and history in `localStorage`:
 
 ```text
 voc-info-volcano-preferences-v2
 voc-info-notification-center-v1
 ```
 
-没有服务器端订阅者数据库，也没有邮件发送密钥配置。
+## Default Channels
+
+- USGS/HVO volcano alert level and aviation color changes at advisory/watch/warning levels.
+- HVO official EP windows or model-estimate windows.
+- Heuristic activity-signal threshold crossings.
+- Significant USGS earthquakes: M3.0+ records an event, and M5.0+ is marked as danger.
+- NOAA/NWS tsunami alerts.
+- NOAA/NWS sudden severe-weather alerts, including warning/emergency wording, flash flood, high wind, hurricane, tropical storm, coastal flood, high surf, red flag, volcanic ash, and special marine alerts.
+- Optional source-degradation alerts.
+
+The default dashboard is the virtual `hawaii-island` view, so earthquake and
+hazard notifications use the merged Big Island data collection rather than only
+the Kilauea 50 km view.

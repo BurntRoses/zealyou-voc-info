@@ -32,7 +32,8 @@ All endpoints return JSON:
 
 ## `GET /api/volcanoes`
 
-Returns USGS VSC volcano records.
+Returns USGS VSC volcano records plus a virtual `hawaii-island` record that
+combines the primary Big Island volcano context used by the public dashboard.
 
 Optional query params:
 
@@ -40,6 +41,8 @@ Optional query params:
 - `region`: case-insensitive region filter.
 - `limit`: default `250`, clamped to `1..1000`.
 - `offset`: default `0`.
+- `refresh`: optional cache-busting flag. When present, upstream in-memory
+  caches are bypassed for this request.
 
 `data[]` item:
 
@@ -68,14 +71,19 @@ Optional query params:
 
 ## `GET /api/volcano/:id/dashboard?days=7`
 
-`:id` can be a VNUM, USGS `volcanoCd`, slug, or volcano name.
+`:id` can be a VNUM, USGS `volcanoCd`, slug, volcano name, or the virtual
+`hawaii-island` dashboard. `hawaii-island` merges Kilauea and Mauna Loa HANS
+notices, HVO status context, Big Island earthquake collection, and NOAA/NWS
+hazard alerts.
 
 Optional query params:
 
 - `days`: HANS notice and earthquake lookback, default `7`, clamped to `1..30`.
-- `radiusKm`: earthquake radius around volcano coordinates, default `50`,
+- `radiusKm`: earthquake radius around volcano coordinates, default `100`,
   clamped to `5..200`.
 - `noaa`: set `0` to skip optional NOAA/NWS active alerts.
+- `refresh`: optional cache-busting flag. When present, upstream in-memory
+  caches are bypassed for this request.
 
 `data` contains:
 
@@ -85,6 +93,8 @@ Optional query params:
 - `history`: Smithsonian GVP volcano profile, eruption-history metadata, and
   HANS-derived official episode records when present in the selected lookback.
 - `weatherAlerts`: optional NOAA/NWS active alerts near the volcano point.
+  The `hawaii-island` dashboard checks multiple Big Island points so tsunami
+  and sudden severe-weather alerts are less likely to be missed.
 - `weather`: NOAA/NWS point metadata, daily forecast, and hourly forecast
   near the volcano point. Weather is travel context and is not used as
   volcano-prediction evidence.
@@ -249,10 +259,10 @@ overridden with `API_USER_AGENT`.
 
 In-memory cache:
 
-- USGS VSC volcanoes: 15 minute TTL, stale fallback up to 6 hours.
-- HANS notices: 5 minute TTL, stale fallback up to 1 hour.
-- USGS earthquakes: 2 minute TTL, stale fallback up to 30 minutes.
+- USGS VSC volcanoes: 5 minute TTL, stale fallback up to 6 hours.
+- HANS notices: 2 minute TTL, stale fallback up to 1 hour.
+- USGS earthquakes: 30 second TTL, stale fallback up to 30 minutes.
 - Smithsonian GVP: 24 hour TTL, stale fallback up to 7 days.
-- NOAA/NWS alerts: 5 minute TTL, stale fallback up to 30 minutes.
+- NOAA/NWS alerts: 1 minute TTL, stale fallback up to 30 minutes.
 - NOAA/NWS point metadata: 12 hour TTL, stale fallback up to 7 days.
-- NOAA/NWS forecast/hourly: 10 minute TTL, stale fallback up to 2 hours.
+- NOAA/NWS forecast/hourly: 3 minute TTL, stale fallback up to 2 hours.

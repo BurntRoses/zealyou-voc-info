@@ -470,7 +470,7 @@ test('readAppUrlState parses query values', () => {
 
   const state = readAppUrlState();
   assert.equal(state.activeView, 'map');
-  assert.equal(state.selectedVolcanoId, 'kilauea');
+  assert.equal(state.selectedVolcanoId, 'hawaii-island');
   assert.equal(state.mapLayer, 'satellite');
   assert.equal(state.showQuakes, false);
   assert.equal(state.radiusKm, 150);

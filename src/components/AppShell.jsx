@@ -260,6 +260,8 @@ function NotificationPanel({
     channels: { ...defaultNotificationPreferences.channels, ...(preferences?.channels ?? {}) },
   };
   const channelLabels = [
+    ['earthquakes', '强震'],
+    ['tsunami', '海啸'],
     ['status', '官方警戒'],
     ['windows', 'EP 窗口'],
     ['signal', '活动信号'],

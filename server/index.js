@@ -16,7 +16,7 @@ app.use((req, res, next) => {
   res.setHeader(
     "Cache-Control",
     req.method === "GET" && req.path !== "/api/health"
-      ? "public, max-age=60, stale-while-revalidate=600"
+      ? "public, max-age=20, stale-while-revalidate=90"
       : "no-store",
   );
 
@@ -59,8 +59,9 @@ app.get("/api/volcanoes", async (req, res) => {
     const region = String(req.query.region ?? "").trim().toLowerCase();
     const limit = clampInteger(req.query.limit, 250, 1, 1000);
     const offset = clampInteger(req.query.offset, 0, 0, 100000);
+    const forceRefresh = req.query.refresh !== undefined;
 
-    const result = await getVolcanoes();
+    const result = await getVolcanoes({ forceRefresh });
     let volcanoes = result.volcanoes;
 
     if (query) {
@@ -124,13 +125,15 @@ app.get("/api/volcano/:id/dashboard", async (req, res) => {
   try {
     const id = String(req.params.id ?? "").trim();
     const days = clampInteger(req.query.days, 7, 1, 30);
-    const radiusKm = clampInteger(req.query.radiusKm, 50, 5, 200);
+    const radiusKm = clampInteger(req.query.radiusKm, 100, 5, 200);
     const includeNoaa = String(req.query.noaa ?? "1") !== "0";
+    const forceRefresh = req.query.refresh !== undefined;
 
     const dashboard = await getDashboardData(id, {
       days,
       radiusKm,
       includeNoaa,
+      forceRefresh,
     });
 
     if (!dashboard.found) {
@@ -176,6 +179,7 @@ app.get("/api/volcano/:id/dashboard", async (req, res) => {
         days,
         radiusKm,
         includeNoaa,
+        forceRefresh,
         degraded: dashboard.diagnostics.degraded,
       },
       sources: dashboard.sources,

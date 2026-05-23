@@ -10,10 +10,10 @@ export const viewIds = new Set(views.map((view) => view.id));
 
 export const defaultUrlState = {
   activeView: 'today',
-  selectedVolcanoId: 'kilauea',
+  selectedVolcanoId: 'hawaii-island',
   mapLayer: 'topo',
   showQuakes: true,
-  radiusKm: 50,
+  radiusKm: 100,
   includeNoaa: true,
 };
 

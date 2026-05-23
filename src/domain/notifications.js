@@ -5,6 +5,10 @@ import {
   cnStatus,
   formatDateTime,
   formatWindowLabel,
+  getQuakeArea,
+  getQuakeDepthKm,
+  getQuakeId,
+  getQuakeMagnitude,
   primaryVolcanoName,
   statusTone,
 } from './formatters.js';
@@ -16,6 +20,8 @@ export const defaultNotificationPreferences = {
     status: true,
     windows: true,
     signal: true,
+    earthquakes: true,
+    tsunami: true,
     weather: true,
     sources: false,
   },
@@ -131,8 +137,70 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
     }
   }
 
+  if (channels.earthquakes) {
+    const quake = strongestRecentQuake(dashboard.earthquakes);
+    if (quake) {
+      const magnitude = getQuakeMagnitude(quake);
+      const depthKm = getQuakeDepthKm(quake);
+      events.push({
+        key: [
+          'earthquake',
+          getQuakeId(quake),
+          magnitude.toFixed(1),
+          quake.time ?? '',
+        ].join(':'),
+        type: 'earthquake',
+        tone: earthquakeTone(magnitude),
+        title: `${volcanoName} significant earthquake M${magnitude.toFixed(1)}`,
+        body: `${getQuakeArea(quake)}. Depth ${depthKm.toFixed(1)} km. Verify USGS and local emergency notices.`,
+        meta: formatDateTime(quake.time ?? generatedAt, dashboard.timeZone ?? 'Pacific/Honolulu'),
+        sourceUrl: quake.url ?? sourceUrl,
+      });
+    }
+  }
+
+  if (channels.tsunami) {
+    const tsunamiAlerts = (Array.isArray(dashboard.weatherAlerts) ? dashboard.weatherAlerts : []).filter(isTsunamiAlert);
+    if (tsunamiAlerts.length) {
+      const first = tsunamiAlerts[0] ?? {};
+      const alertKey = tsunamiAlerts
+        .slice(0, 5)
+        .map((alert, index) => alert.id ?? alert.event ?? alert.headline ?? index)
+        .join('|');
+      events.push({
+        key: `tsunami:${tsunamiAlerts.length}:${alertKey}`,
+        type: 'tsunami',
+        tone: 'danger',
+        title: `${volcanoName} tsunami alert`,
+        body: String(first.headline ?? first.event ?? first.description ?? 'NOAA/NWS tsunami alert.').slice(0, 180),
+        meta: 'NOAA/NWS',
+        sourceUrl: first.url ?? sourceUrl,
+      });
+    }
+  }
+
   if (channels.weather) {
-    const weatherAlerts = Array.isArray(dashboard.weatherAlerts) ? dashboard.weatherAlerts : [];
+    const severeAlerts = (Array.isArray(dashboard.weatherAlerts) ? dashboard.weatherAlerts : [])
+      .filter((alert) => !isTsunamiAlert(alert) && isSevereWeatherAlert(alert));
+    if (severeAlerts.length) {
+      const first = severeAlerts[0] ?? {};
+      const alertKey = severeAlerts
+        .slice(0, 5)
+        .map((alert, index) => alert.id ?? alert.event ?? alert.headline ?? index)
+        .join('|');
+      events.push({
+        key: `severe-weather:${severeAlerts.length}:${alertKey}`,
+        type: 'weather',
+        tone: weatherTone(first),
+        title: `${volcanoName} severe weather alert`,
+        body: String(first.headline ?? first.event ?? first.description ?? 'NOAA/NWS severe weather alert.').slice(0, 180),
+        meta: 'NOAA/NWS',
+        sourceUrl: first.url ?? sourceUrl,
+      });
+    }
+
+    const weatherAlerts = (Array.isArray(dashboard.weatherAlerts) ? dashboard.weatherAlerts : [])
+      .filter((alert) => !isTsunamiAlert(alert) && !isSevereWeatherAlert(alert));
     if (weatherAlerts.length) {
       const first = weatherAlerts[0] ?? {};
       const alertKey = weatherAlerts
@@ -166,6 +234,49 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
   }
 
   return events;
+}
+
+function strongestRecentQuake(earthquakes) {
+  const items = Array.isArray(earthquakes) ? earthquakes : (earthquakes?.events ?? []);
+  return items
+    .filter((quake) => getQuakeMagnitude(quake) >= 3)
+    .sort((left, right) => {
+      const magnitudeDelta = getQuakeMagnitude(right) - getQuakeMagnitude(left);
+      if (Math.abs(magnitudeDelta) >= 0.5) return magnitudeDelta;
+      return (Date.parse(right.time ?? '') || 0) - (Date.parse(left.time ?? '') || 0);
+    })[0] ?? null;
+}
+
+function earthquakeTone(magnitude) {
+  if (magnitude >= 5) return 'danger';
+  if (magnitude >= 4) return 'watch';
+  return 'notice';
+}
+
+function alertText(alert) {
+  return [
+    alert?.event,
+    alert?.headline,
+    alert?.description,
+    alert?.instruction,
+    alert?.severity,
+    alert?.urgency,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function isTsunamiAlert(alert) {
+  return /\btsunami\b/.test(alertText(alert));
+}
+
+function isSevereWeatherAlert(alert) {
+  return /\b(emergency|warning|flash flood|hurricane|tropical storm|severe thunderstorm|tornado|high wind|extreme wind|coastal flood|high surf|red flag|volcanic ash|special marine)\b/.test(alertText(alert));
+}
+
+function weatherTone(alert) {
+  const text = alertText(alert);
+  if (/\b(emergency|warning|extreme|severe|tsunami)\b/.test(text)) return 'danger';
+  if (/\bwatch|advisory|expected|immediate\b/.test(text)) return 'watch';
+  return 'notice';
 }
 
 function clampNumber(value, fallback, min, max) {

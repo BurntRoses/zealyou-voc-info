@@ -11,7 +11,7 @@ export function useDashboardData(selectedVolcanoId, options) {
     const controller = new AbortController();
     setVolcanoState({ loading: true, error: '' });
 
-    getVolcanoes(controller.signal)
+    getVolcanoes(controller.signal, options.refreshKey)
       .then((items) => {
         setVolcanoes(items);
         setVolcanoState({ loading: false, error: '' });
@@ -41,6 +41,7 @@ export function useDashboardData(selectedVolcanoId, options) {
         days: options.days,
         radiusKm: options.radiusKm,
         includeNoaa: options.includeNoaa,
+        refreshKey: options.refreshKey,
       },
       controller.signal,
     )

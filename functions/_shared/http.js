@@ -14,7 +14,7 @@ export function jsonEnvelope(payload, status = 200, options = {}) {
     {
       status,
       headers: {
-        "Cache-Control": options.cacheControl ?? "public, max-age=60, s-maxage=180, stale-while-revalidate=600",
+        "Cache-Control": options.cacheControl ?? "public, max-age=20, s-maxage=30, stale-while-revalidate=90",
       },
     },
   );

@@ -50,6 +50,7 @@ const WEATHER_ZH = new Map([
 ]);
 
 const VOLCANO_NAMES = {
+  'hawaii-island': { zh: 'Hawaii Island', en: 'Hawaii Island' },
   kilauea: { zh: '基拉韦厄', en: 'Kilauea' },
   'mauna-loa': { zh: '莫纳罗亚', en: 'Mauna Loa' },
 };
@@ -81,6 +82,7 @@ export function primaryVolcanoName(value, language = 'zh') {
   const parts = text.split('/').map((part) => part.trim()).filter(Boolean);
   const slug = slugify(parts.join(' '));
   const mapped = VOLCANO_NAMES[slug]
+    ?? (slug.includes('hawaii-island') || slug.includes('big-island') ? VOLCANO_NAMES['hawaii-island'] : null)
     ?? (slug.includes('kilauea') ? VOLCANO_NAMES.kilauea : null)
     ?? (slug.includes('mauna') ? VOLCANO_NAMES['mauna-loa'] : null);
   if (mapped) return mapped[language] ?? mapped.zh;

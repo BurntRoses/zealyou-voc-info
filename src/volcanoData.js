@@ -36,6 +36,25 @@ export const mockVolcanoes = [
     coordinates: { lat: 19.475, lon: -155.608 },
     officialUrl: 'https://www.usgs.gov/volcanoes/mauna-loa',
   },
+  {
+    id: 'hawaii-island',
+    vnum: 'hawaii-island',
+    slug: 'hawaii-island',
+    volcanoCd: null,
+    name: 'Hawaii Island Volcanoes',
+    island: 'Island of Hawaii',
+    region: 'Hawaii',
+    alertLevel: 'WATCH',
+    colorCode: 'ORANGE',
+    officialLevel: 'Watch',
+    lastUpdated: '2026-05-13T19:00:00Z',
+    coordinates: { lat: 19.55, lon: -155.55 },
+    officialUrl: 'https://www.usgs.gov/observatories/hvo',
+    notice: {
+      synopsis: 'Composite Hawaii Island view combining Kilauea, Mauna Loa, earthquakes, NOAA/NWS alerts, and HVO sources.',
+      url: 'https://www.usgs.gov/observatories/hvo',
+    },
+  },
 ];
 
 export const mockDashboards = {
@@ -71,13 +90,27 @@ export const mockDashboards = {
     signal: 8,
     statusSummary: 'Activity remains near background; no official short-term eruption window detected.',
   }),
+  'hawaii-island': buildMockDashboard(mockVolcanoes[2], {
+    key: 'hawaii-island',
+    eruptionState: { state: 'monitoring', label: 'Composite monitoring', source: 'official' },
+    officialWindow: null,
+    signal: 44,
+    statusSummary: 'Composite Hawaii Island monitoring view for Kilauea, Mauna Loa, earthquakes, tsunami, and severe weather alerts.',
+  }),
 };
 
 function buildMockDashboard(volcano, options) {
   const generatedAt = new Date().toISOString();
   const webcamKey = options.key;
+  const fallbackRadiusKm = webcamKey === 'hawaii-island' ? 100 : 50;
   const webcams = officialWebcams[webcamKey] ?? officialWebcams.kilauea;
-  const earthquakes = webcamKey === 'kilauea'
+  const earthquakes = webcamKey === 'hawaii-island'
+    ? [
+        quake('hv-demo-major', 19.298, -155.872, 5.9, 22.6, '13 km S of Honaunau-Napoopoo, Hawaii', '2026-05-23T07:46:01Z'),
+        quake('k1', 19.406, -155.283, 2.8, 3.1, 'Halemaumau', '2026-05-12T12:30:00Z'),
+        quake('m1', 19.475, -155.608, 1.4, 7.1, 'Moku aweoweo', '2026-05-12T12:00:00Z'),
+      ]
+    : webcamKey === 'kilauea'
     ? [
         quake('k1', 19.406, -155.283, 2.8, 3.1, 'Halemaumau', '2026-05-12T12:30:00Z'),
         quake('k2', 19.392, -155.221, 2.1, 4.5, 'South caldera', '2026-05-12T09:10:00Z'),
@@ -162,7 +195,7 @@ function buildMockDashboard(volcano, options) {
     },
     forecastSeries: buildFallbackSeries(options.signal),
     earthquakes,
-    earthquakeStats: buildEarthquakeStats(earthquakes, 7, 50),
+    earthquakeStats: buildEarthquakeStats(earthquakes, 7, fallbackRadiusKm),
     history: {
       episodes: [
         ...episodeRows,
@@ -202,7 +235,7 @@ function buildMockDashboard(volcano, options) {
       aviation: { colorCode: volcano.colorCode, alertLevel: volcano.alertLevel, updatedAt: volcano.lastUpdated },
       weatherSnapshot: null,
       weatherAlerts: 0,
-      earthquakeSummary: buildEarthquakeStats(earthquakes, 7, 50),
+      earthquakeSummary: buildEarthquakeStats(earthquakes, 7, fallbackRadiusKm),
       webcams,
       officialLinks: {
         volcano: volcano.officialUrl,
@@ -233,7 +266,7 @@ export function normalizeVolcanoes(payload) {
   const tracked = items.filter((item) => {
     const key = String(item.vnum ?? item.id ?? item.slug ?? '').toLowerCase();
     const nameSlug = slugify(item.name);
-    return ['332010', '332020', 'kilauea', 'mauna-loa'].includes(key) || nameSlug === 'kilauea' || nameSlug === 'mauna-loa';
+    return ['332010', '332020', 'kilauea', 'mauna-loa', 'hawaii-island', 'big-island'].includes(key) || nameSlug === 'kilauea' || nameSlug === 'mauna-loa' || nameSlug === 'hawaii-island';
   });
 
   return (tracked.length ? tracked : items).map((item, index) => {
@@ -498,6 +531,7 @@ function buildEarthquakeStats(earthquakes, days = 7, radiusKm = 50) {
 function displayName(value) {
   const text = String(value ?? '').replace(/K澧╨auea/g, 'Kilauea').replace(/K墨lauea/g, 'Kilauea');
   const slug = slugify(text);
+  if (slug.includes('hawaii-island') || slug.includes('big-island')) return 'Hawaii Island Volcanoes';
   if (slug.includes('kilauea')) return '基拉韦厄 / Kilauea';
   if (slug.includes('mauna-loa')) return '莫纳罗亚 / Mauna Loa';
   return text;

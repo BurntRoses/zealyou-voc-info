@@ -15,8 +15,11 @@ async function readJson(response) {
   return response.json();
 }
 
-export async function getVolcanoes(signal) {
-  const payload = await fetch('/api/volcanoes', { signal }).then(readJson);
+export async function getVolcanoes(signal, refreshKey) {
+  const params = new URLSearchParams();
+  if (refreshKey !== undefined) params.set('refresh', String(refreshKey));
+  const path = params.size ? `/api/volcanoes?${params.toString()}` : '/api/volcanoes';
+  const payload = await fetch(path, { signal }).then(readJson);
   return normalizeVolcanoes(payload);
 }
 
@@ -24,12 +27,15 @@ export async function getDashboard(volcanoId, options = 7, signal) {
   const encodedId = encodeURIComponent(volcanoId);
   const normalizedOptions = typeof options === 'number'
     ? { days: options }
-    : { days: 7, radiusKm: 50, includeNoaa: true, ...options };
+    : { days: 7, radiusKm: 100, includeNoaa: true, ...options };
   const params = new URLSearchParams({
     days: String(normalizedOptions.days ?? 7),
-    radiusKm: String(normalizedOptions.radiusKm ?? 50),
+    radiusKm: String(normalizedOptions.radiusKm ?? 100),
     noaa: normalizedOptions.includeNoaa === false ? '0' : '1',
   });
+  if (normalizedOptions.refreshKey !== undefined) {
+    params.set('refresh', String(normalizedOptions.refreshKey));
+  }
   const payload = await fetch(`/api/volcano/${encodedId}/dashboard?${params.toString()}`, { signal }).then(readJson);
   return preserveSourceMetadata(normalizeDashboardPayload(payload, volcanoId), payload);
 }
