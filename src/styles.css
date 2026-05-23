@@ -1572,6 +1572,7 @@ p {
 .trends-grid,
 .map-view,
 .cameras-view,
+.viewing-view,
 .sources-view {
   display: grid;
   gap: 16px;
@@ -3291,6 +3292,442 @@ p {
   outline: 4px solid rgba(15, 123, 120, 0.28);
 }
 
+.viewing-view {
+  align-content: start;
+}
+
+.viewing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+  padding: 18px;
+  border-left: 4px solid var(--accent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 54%),
+    var(--surface);
+}
+
+.viewing-hero__copy {
+  min-width: 0;
+}
+
+.viewing-hero h1 {
+  margin-top: 9px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3vw, 44px);
+  font-weight: 840;
+  line-height: 1.08;
+}
+
+.viewing-hero p {
+  max-width: 880px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.viewing-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.viewing-hero__actions button,
+.viewing-hero__actions a,
+.crater-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 780;
+  text-decoration: none;
+}
+
+.viewing-hero__actions button:hover,
+.viewing-hero__actions a:hover,
+.crater-tabs button:hover,
+.crater-tabs button.is-active {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--accent);
+}
+
+.viewing-readiness {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.readiness-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 3px 8px;
+  min-height: 92px;
+  padding: 13px;
+  overflow: hidden;
+}
+
+.readiness-card::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: currentColor;
+  content: "";
+  opacity: 0.68;
+}
+
+.readiness-card svg {
+  grid-row: 1 / span 3;
+}
+
+.readiness-card span,
+.readiness-card strong,
+.readiness-card em {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.readiness-card span,
+.readiness-card em {
+  font-size: 12px;
+  font-style: normal;
+}
+
+.readiness-card strong {
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 840;
+  line-height: 1.14;
+  white-space: nowrap;
+}
+
+.viewing-main-grid,
+.viewing-locations-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 16px;
+  align-items: start;
+}
+
+.crater-activity-card,
+.viewing-map-panel {
+  overflow: hidden;
+}
+
+.crater-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.crater-image-frame {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(16, 25, 29, 0.96), rgba(31, 48, 54, 0.96)),
+    #10191d;
+}
+
+.crater-image-frame img {
+  width: 100%;
+  max-height: 600px;
+  border-radius: var(--radius);
+  object-fit: contain;
+}
+
+.crater-caption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.crater-caption strong,
+.crater-caption span {
+  display: block;
+  min-width: 0;
+}
+
+.crater-caption strong {
+  font-size: 14px;
+  font-weight: 820;
+}
+
+.crater-caption span {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.crater-caption a,
+.selected-location-panel footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 780;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.viewing-decision-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.decision-stack {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.decision-stack span,
+.selected-location-grid span {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--surface);
+}
+
+.decision-stack strong,
+.selected-location-grid strong {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 820;
+}
+
+.decision-stack em,
+.selected-location-grid em {
+  color: var(--ink);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.decision-note {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  margin: 14px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--watch) 24%, var(--border));
+  border-radius: var(--radius);
+  background: var(--watch-bg);
+  color: var(--watch);
+}
+
+.decision-note p {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.viewing-map-wrap {
+  position: relative;
+  background: var(--surface-2);
+}
+
+.viewing-leaflet {
+  height: 520px;
+  min-height: 520px;
+}
+
+.viewing-map-icon {
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.viewing-map-icon span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--notice);
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.24);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.viewing-map-icon.tone-good span {
+  background: var(--good);
+}
+
+.viewing-map-icon.tone-watch span {
+  background: var(--watch);
+}
+
+.viewing-map-icon.tone-danger span {
+  background: var(--danger);
+}
+
+.viewing-map-icon.is-selected span {
+  outline: 5px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  transform: scale(1.08);
+}
+
+.viewing-map-legend {
+  left: 14px;
+  right: auto;
+}
+
+.location-list-panel {
+  overflow: hidden;
+}
+
+.location-list {
+  display: grid;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.location-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 10px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 74px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.location-card:hover,
+.location-card.is-active {
+  background: color-mix(in srgb, currentColor 8%, var(--surface));
+  box-shadow: inset 4px 0 0 currentColor;
+}
+
+.location-rank {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, currentColor 38%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, var(--surface));
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.location-card strong,
+.location-card em {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.location-card strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 820;
+  white-space: nowrap;
+}
+
+.location-card em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.location-card i {
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  opacity: 0.56;
+  transform: rotate(45deg);
+}
+
+.selected-location-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.selected-location-copy h2 {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2vw, 32px);
+  font-weight: 840;
+}
+
+.selected-location-copy p {
+  max-width: 880px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.selected-location-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+}
+
+.tag-row,
+.caution-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-row span,
+.caution-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.caution-list span {
+  border-color: color-mix(in srgb, var(--watch) 22%, var(--border));
+  background: var(--watch-bg);
+  color: var(--watch);
+}
+
 :root[data-theme="dark"] .leaflet-control-zoom a,
 :root[data-theme="dark"] .leaflet-control-attribution,
 :root[data-theme="dark"] .leaflet-popup-content-wrapper,
@@ -3995,6 +4432,12 @@ p {
     min-height: 0;
   }
 
+  .viewing-map-wrap,
+  .viewing-map-wrap .viewing-leaflet {
+    height: 520px;
+    min-height: 520px;
+  }
+
   .map-side {
     grid-template-rows: auto minmax(0, 1fr);
     min-height: 0;
@@ -4202,11 +4645,16 @@ p {
   .status-hero,
   .today-grid,
   .map-view,
-  .cameras-view {
+  .cameras-view,
+  .viewing-hero,
+  .viewing-main-grid,
+  .viewing-locations-grid {
     grid-template-columns: 1fr;
   }
 
   .overview-row,
+  .viewing-readiness,
+  .selected-location-grid,
   .trends-summary,
   .strategy-grid,
   .strategy-brief,
@@ -4409,6 +4857,8 @@ p {
   .hero-decision-chain,
   .condition-strip,
   .overview-row,
+  .viewing-readiness,
+  .selected-location-grid,
   .trends-summary,
   .strategy-grid,
   .strategy-brief,
@@ -4430,6 +4880,22 @@ p {
 
   .status-hero {
     padding: 16px;
+  }
+
+  .viewing-hero {
+    align-items: start;
+  }
+
+  .viewing-hero__actions {
+    justify-content: flex-start;
+  }
+
+  .crater-caption {
+    grid-template-columns: 1fr;
+  }
+
+  .crater-caption a {
+    justify-self: start;
   }
 
   .hero-copy h1 {
@@ -4522,6 +4988,12 @@ p {
   .map-panel {
     min-height: 440px;
     height: 440px;
+  }
+
+  .viewing-map-wrap,
+  .viewing-map-wrap .viewing-leaflet {
+    min-height: 420px;
+    height: 420px;
   }
 
   .map-legend {

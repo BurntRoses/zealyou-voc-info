@@ -8,6 +8,7 @@ import {
   Clock3,
   Database,
   ExternalLink,
+  Eye,
   MapPinned,
   MonitorUp,
   Moon,
@@ -27,6 +28,7 @@ import { TimeZonePicker } from './TimeZonePicker.jsx';
 
 const viewIcons = {
   today: Mountain,
+  viewing: Eye,
   trends: TrendingUp,
   map: MapPinned,
   cameras: Camera,

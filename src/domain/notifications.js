@@ -142,6 +142,7 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
     if (quake) {
       const magnitude = getQuakeMagnitude(quake);
       const depthKm = getQuakeDepthKm(quake);
+      const place = formatQuakeAreaZh(getQuakeArea(quake));
       events.push({
         key: [
           'earthquake',
@@ -151,8 +152,8 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
         ].join(':'),
         type: 'earthquake',
         tone: earthquakeTone(magnitude),
-        title: `${volcanoName} significant earthquake M${magnitude.toFixed(1)}`,
-        body: `${getQuakeArea(quake)}. Depth ${depthKm.toFixed(1)} km. Verify USGS and local emergency notices.`,
+        title: `${volcanoName} 近期强震 M${magnitude.toFixed(1)}`,
+        body: `${place}，震源深度 ${depthKm.toFixed(1)} km。请核对 USGS 和当地应急通知。`,
         meta: formatDateTime(quake.time ?? generatedAt, dashboard.timeZone ?? 'Pacific/Honolulu'),
         sourceUrl: quake.url ?? sourceUrl,
       });
@@ -171,8 +172,8 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
         key: `tsunami:${tsunamiAlerts.length}:${alertKey}`,
         type: 'tsunami',
         tone: 'danger',
-        title: `${volcanoName} tsunami alert`,
-        body: String(first.headline ?? first.event ?? first.description ?? 'NOAA/NWS tsunami alert.').slice(0, 180),
+        title: `${volcanoName} 海啸提醒`,
+        body: String(first.headline ?? first.event ?? first.description ?? 'NOAA/NWS 发布海啸提醒。').slice(0, 180),
         meta: 'NOAA/NWS',
         sourceUrl: first.url ?? sourceUrl,
       });
@@ -192,8 +193,8 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
         key: `severe-weather:${severeAlerts.length}:${alertKey}`,
         type: 'weather',
         tone: weatherTone(first),
-        title: `${volcanoName} severe weather alert`,
-        body: String(first.headline ?? first.event ?? first.description ?? 'NOAA/NWS severe weather alert.').slice(0, 180),
+        title: `${volcanoName} 强天气提醒`,
+        body: String(first.headline ?? first.event ?? first.description ?? 'NOAA/NWS 发布强天气提醒。').slice(0, 180),
         meta: 'NOAA/NWS',
         sourceUrl: first.url ?? sourceUrl,
       });
@@ -251,6 +252,51 @@ function earthquakeTone(magnitude) {
   if (magnitude >= 5) return 'danger';
   if (magnitude >= 4) return 'watch';
   return 'notice';
+}
+
+function formatQuakeAreaZh(area) {
+  return String(area ?? '夏威夷大岛')
+    .replace(/\bof\b/gi, '距')
+    .replace(/\bIsland of Hawaii\b/gi, '夏威夷大岛')
+    .replace(/\bHawaii Island\b/gi, '夏威夷大岛')
+    .replace(/\bHawaii\b/gi, '夏威夷')
+    .replace(/\bPahala\b/gi, '帕哈拉')
+    .replace(/\bKilauea\b/gi, '基拉韦厄')
+    .replace(/\bMauna Loa\b/gi, '冒纳罗亚')
+    .replace(/\bNaalehu\b/gi, '纳阿莱胡')
+    .replace(/\bVolcano\b/gi, '火山村')
+    .replace(/\bHilo\b/gi, '希洛')
+    .replace(/\bKailua-Kona\b/gi, '凯卢阿-科纳')
+    .replace(/\bSSE\b/g, directionZh('SSE'))
+    .replace(/\bSSW\b/g, directionZh('SSW'))
+    .replace(/\bNNE\b/g, directionZh('NNE'))
+    .replace(/\bNNW\b/g, directionZh('NNW'))
+    .replace(/\bENE\b/g, directionZh('ENE'))
+    .replace(/\bESE\b/g, directionZh('ESE'))
+    .replace(/\bWNW\b/g, directionZh('WNW'))
+    .replace(/\bWSW\b/g, directionZh('WSW'))
+    .replace(/\bN\b/g, directionZh('N'))
+    .replace(/\bS\b/g, directionZh('S'))
+    .replace(/\bE\b/g, directionZh('E'))
+    .replace(/\bW\b/g, directionZh('W'));
+}
+
+function directionZh(value) {
+  const map = {
+    N: '北',
+    S: '南',
+    E: '东',
+    W: '西',
+    SSE: '南偏东',
+    SSW: '南偏西',
+    NNE: '北偏东',
+    NNW: '北偏西',
+    ENE: '东偏北',
+    ESE: '东偏南',
+    WNW: '西偏北',
+    WSW: '西偏南',
+  };
+  return map[value] ?? value;
 }
 
 function alertText(alert) {

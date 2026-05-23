@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { AppShell } from './components/AppShell.jsx';
 import { LoadingState } from './components/LoadingState.jsx';
 import { defaultUrlState, views } from './domain/config.js';
-import { getQuakeId } from './domain/formatters.js';
+import { getQuakeId, getQuakeMagnitude } from './domain/formatters.js';
 import {
   defaultNotificationPreferences,
   mergeNotificationPreferences,
@@ -21,6 +21,7 @@ const CamerasView = lazy(() => import('./features/cameras/CamerasView.jsx').then
 const MapView = lazy(() => import('./features/map/MapView.jsx').then((module) => ({ default: module.MapView })));
 const TrendsView = lazy(() => import('./features/trends/TrendsView.jsx').then((module) => ({ default: module.TrendsView })));
 const SourcesView = lazy(() => import('./features/sources/SourcesView.jsx').then((module) => ({ default: module.SourcesView })));
+const ViewingView = lazy(() => import('./features/viewing/ViewingView.jsx').then((module) => ({ default: module.ViewingView })));
 
 function App() {
   const [urlState, setUrlState] = useUrlState();
@@ -57,8 +58,9 @@ function App() {
   }, [urlState.radiusKm, urlState.showQuakes]);
 
   useEffect(() => {
-    if (!selectedQuakeId && dashboard?.earthquakes?.[0]) {
-      setSelectedQuakeId(getQuakeId(dashboard.earthquakes[0]));
+    const defaultQuake = strongestRecentQuake(dashboard?.earthquakes, { includeFallback: true });
+    if (!selectedQuakeId && defaultQuake) {
+      setSelectedQuakeId(getQuakeId(defaultQuake));
     }
   }, [dashboard, selectedQuakeId]);
 
@@ -93,6 +95,17 @@ function App() {
 
     if (activeView === 'trends') {
       return <TrendsView dashboard={dashboard} timeZone={timeZone} />;
+    }
+
+    if (activeView === 'viewing') {
+      return (
+        <ViewingView
+          dashboard={dashboard}
+          selectedVolcano={fixedVolcano}
+          timeZone={timeZone}
+          onNavigate={(nextView) => setUrlState({ activeView: nextView })}
+        />
+      );
     }
 
     if (activeView === 'map') {
@@ -158,6 +171,18 @@ function App() {
       </Suspense>
     </AppShell>
   );
+}
+
+function strongestRecentQuake(earthquakes, { includeFallback = false } = {}) {
+  const items = Array.isArray(earthquakes) ? earthquakes : (earthquakes?.events ?? []);
+  const significant = items.filter((quake) => getQuakeMagnitude(quake) >= 3);
+  const candidates = significant.length || !includeFallback ? significant : items;
+  return [...candidates]
+    .sort((left, right) => {
+      const magnitudeDelta = getQuakeMagnitude(right) - getQuakeMagnitude(left);
+      if (Math.abs(magnitudeDelta) >= 0.1) return magnitudeDelta;
+      return (Date.parse(right.time ?? '') || 0) - (Date.parse(left.time ?? '') || 0);
+    })[0] ?? null;
 }
 
 export default App;

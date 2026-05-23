@@ -176,6 +176,7 @@ export function viewCopy(view, language = 'zh') {
   const labels = {
     zh: {
       today: ['状态', '状态', 'USGS/HVO 当前警戒'],
+      viewing: ['观赏', '观赏', '火山口活动图和最佳观赏点'],
       cameras: ['影像', '影像', 'HVO 摄像头'],
       map: ['地图', '地图', '位置、地震和半径'],
       trends: ['研判', '研判', '官方窗口、活动信号和历史'],
@@ -184,6 +185,7 @@ export function viewCopy(view, language = 'zh') {
     },
     en: {
       today: ['Today', 'Today', 'Status, advice, and key sources'],
+      viewing: ['Viewing', 'Viewing', 'Crater activity and best viewpoints'],
       cameras: ['Imagery', 'Cameras', 'USGS/HVO cameras'],
       map: ['Map', 'Map', 'Location, quakes, and radius'],
       trends: ['Outlook', 'Outlook', 'Official window, chase index, and history'],

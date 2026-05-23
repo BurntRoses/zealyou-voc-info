@@ -51,8 +51,11 @@ test('buildDashboardNotifications creates high earthquake and hazard events', ()
     selectedVolcano: mockVolcanoes.find((volcano) => volcano.id === 'hawaii-island'),
     preferences: defaultNotificationPreferences,
   });
+  const earthquake = events.find((event) => event.type === 'earthquake');
 
-  assert.ok(events.some((event) => event.type === 'earthquake' && event.tone === 'danger'));
+  assert.equal(earthquake?.tone, 'danger');
+  assert.match(earthquake?.title ?? '', /近期强震 M5\.9|近期强震 M6\.0/);
+  assert.match(earthquake?.body ?? '', /震源深度/);
   assert.ok(events.some((event) => event.type === 'tsunami' && event.tone === 'danger'));
   assert.ok(events.some((event) => event.type === 'weather' && event.tone === 'danger'));
 });

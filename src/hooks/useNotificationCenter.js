@@ -33,7 +33,14 @@ export function useNotificationCenter({ dashboard, selectedVolcano, preferences 
 
     setState((current) => {
       const currentItems = Array.isArray(current.items) ? current.items : [];
-      const existingKeys = new Set(currentItems.map((item) => item.key));
+      const eventsByKey = new Map(events.map((event) => [event.key, event]));
+      const updatedItems = currentItems.map((item) => {
+        const event = eventsByKey.get(item.key);
+        return event
+          ? { ...item, ...event, id: item.id, createdAt: item.createdAt, read: item.read }
+          : item;
+      });
+      const existingKeys = new Set(updatedItems.map((item) => item.key));
       const createdAt = new Date().toISOString();
       const newItems = events
         .filter((event) => !existingKeys.has(event.key))
@@ -43,12 +50,16 @@ export function useNotificationCenter({ dashboard, selectedVolcano, preferences 
           createdAt,
           read: false,
         }));
+      const updatedExisting = updatedItems.some((item, index) => {
+        const currentItem = currentItems[index];
+        return item.title !== currentItem.title || item.body !== currentItem.body || item.meta !== currentItem.meta;
+      });
 
-      if (!newItems.length) return current;
+      if (!newItems.length && !updatedExisting) return current;
 
       return {
         ...current,
-        items: [...newItems, ...currentItems].slice(0, maxNotificationItems),
+        items: [...newItems, ...updatedItems].slice(0, maxNotificationItems),
       };
     });
   }, [dashboard, events, notificationPreferences.inPage, setState]);

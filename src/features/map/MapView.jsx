@@ -35,7 +35,8 @@ export function MapView({
   const markerLayerRef = useRef(null);
   const coordinates = getCoordinates(dashboard, selectedVolcano);
   const quakes = useMemo(() => buildNearbyQuakeRows(dashboard.earthquakes ?? [], coordinates, radiusKm), [dashboard.earthquakes, coordinates, radiusKm]);
-  const selected = quakes.find((row) => row.id === selectedQuakeId) ?? quakes[0] ?? null;
+  const notableQuakes = useMemo(() => buildNotableQuakeRows(quakes), [quakes]);
+  const selected = quakes.find((row) => row.id === selectedQuakeId) ?? notableQuakes[0] ?? quakes[0] ?? null;
   const selectedQuake = selected?.quake ?? null;
   const layer = mapLayers[mapLayer] ?? mapLayers.topo;
   const [tileState, setTileState] = useState('loading');
@@ -117,7 +118,6 @@ export function MapView({
     }).addTo(markerLayer);
     volcanoMarker.bindPopup(`<strong>${primaryVolcanoName(dashboard.volcano?.name)}</strong><br/>火山中心`);
 
-    const bounds = L.latLngBounds([[coordinates.lat, coordinates.lon]]);
     if (showQuakes) {
       for (const row of quakes) {
         const quakeCoordinates = getQuakeCoordinates(row.quake);
@@ -134,12 +134,25 @@ export function MapView({
         }).addTo(markerLayer);
         marker.on('click', () => onSelectQuake(row.id));
         marker.bindPopup(`<strong>M${getQuakeMagnitude(row.quake).toFixed(1)}</strong><br/>${getQuakeArea(row.quake)}`);
+      }
+    }
+  }, [coordinates, dashboard.volcano?.name, onSelectQuake, quakes, selectedQuakeId, showQuakes]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const bounds = L.latLngBounds([[coordinates.lat, coordinates.lon]]);
+
+    if (showQuakes) {
+      for (const row of quakes) {
+        const quakeCoordinates = getQuakeCoordinates(row.quake);
+        if (!Number.isFinite(quakeCoordinates.lat) || !Number.isFinite(quakeCoordinates.lon)) continue;
         bounds.extend([quakeCoordinates.lat, quakeCoordinates.lon]);
       }
     }
 
     if (bounds.isValid()) map.fitBounds(bounds.pad(0.24), { maxZoom: 12, animate: false });
-  }, [coordinates, dashboard.volcano?.name, onSelectQuake, quakes, selectedQuakeId, showQuakes]);
+  }, [coordinates, quakes, showQuakes]);
 
   useEffect(() => {
     if (selected && selected.id !== selectedQuakeId) onSelectQuake(selected.id);
@@ -202,10 +215,10 @@ export function MapView({
         <section className="panel">
           <header className="panel-head">
             <span><AlertTriangle size={17} />值得注意</span>
-            <strong className="tag">{quakes.length} 条</strong>
+            <strong className="tag">{notableQuakes.length} 条</strong>
           </header>
           <div className="compact-list">
-            {quakes.slice(0, 8).map((row) => (
+            {notableQuakes.slice(0, 8).map((row) => (
               <button
                 className={`quake-button ${row.id === selectedQuakeId ? 'is-active' : ''}`}
                 key={row.id}
@@ -217,12 +230,22 @@ export function MapView({
                 <em>{formatDistanceKm(row.distanceKm)} / {getQuakeDepthKm(row.quake).toFixed(1)} km</em>
               </button>
             ))}
-            {!quakes.length ? <p className="empty-copy">当前半径内没有可展示地震。</p> : null}
+            {!notableQuakes.length ? <p className="empty-copy">当前半径内没有可展示地震。</p> : null}
           </div>
         </section>
       </aside>
     </div>
   );
+}
+
+function buildNotableQuakeRows(rows) {
+  const significant = rows.filter((row) => getQuakeMagnitude(row.quake) >= 3);
+  const candidates = significant.length ? significant : rows;
+  return [...candidates].sort((left, right) => {
+    const magnitudeDelta = getQuakeMagnitude(right.quake) - getQuakeMagnitude(left.quake);
+    if (Math.abs(magnitudeDelta) >= 0.1) return magnitudeDelta;
+    return right.timeValue - left.timeValue || left.distanceKm - right.distanceKm || left.index - right.index;
+  });
 }
 
 function buildNearbyQuakeRows(earthquakes, coordinates, radiusKm) {
