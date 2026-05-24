@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as L from 'leaflet';
-import { AlertTriangle, Crosshair, Eye, EyeOff, Map as MapIcon } from 'lucide-react';
+import { AlertTriangle, Clock3, Crosshair, Eye, EyeOff, Map as MapIcon } from 'lucide-react';
 import { mapLayers } from '../../domain/config.js';
 import {
   formatDateTime,
@@ -40,6 +40,9 @@ export function MapView({
   const selectedQuake = selected?.quake ?? null;
   const layer = mapLayers[mapLayer] ?? mapLayers.topo;
   const [tileState, setTileState] = useState('loading');
+  const [quakeListMode, setQuakeListMode] = useState('notable');
+  const quakeListRows = quakeListMode === 'recent' ? quakes : notableQuakes;
+  const quakeListLabel = quakeListMode === 'recent' ? '最近地震' : '值得关注';
 
   useEffect(() => {
     if (!elementRef.current || mapRef.current) return;
@@ -212,13 +215,33 @@ export function MapView({
           </p>
         </section>
 
-        <section className="panel">
+        <section className="panel quake-list-panel">
           <header className="panel-head">
-            <span><AlertTriangle size={17} />值得注意</span>
-            <strong className="tag">{notableQuakes.length} 条</strong>
+            <span>{quakeListMode === 'recent' ? <Clock3 size={17} /> : <AlertTriangle size={17} />}{quakeListLabel}</span>
+            <strong className="tag">{quakeListRows.length} 条</strong>
           </header>
+          <div className="quake-tabs" role="tablist" aria-label="地震列表切换">
+            <button
+              className={quakeListMode === 'notable' ? 'is-active' : ''}
+              type="button"
+              role="tab"
+              aria-selected={quakeListMode === 'notable'}
+              onClick={() => setQuakeListMode('notable')}
+            >
+              <AlertTriangle size={14} />值得关注
+            </button>
+            <button
+              className={quakeListMode === 'recent' ? 'is-active' : ''}
+              type="button"
+              role="tab"
+              aria-selected={quakeListMode === 'recent'}
+              onClick={() => setQuakeListMode('recent')}
+            >
+              <Clock3 size={14} />最近
+            </button>
+          </div>
           <div className="compact-list">
-            {notableQuakes.slice(0, 8).map((row) => (
+            {quakeListRows.slice(0, 8).map((row) => (
               <button
                 className={`quake-button ${row.id === selectedQuakeId ? 'is-active' : ''}`}
                 key={row.id}
@@ -230,7 +253,7 @@ export function MapView({
                 <em>{formatDistanceKm(row.distanceKm)} / {getQuakeDepthKm(row.quake).toFixed(1)} km</em>
               </button>
             ))}
-            {!notableQuakes.length ? <p className="empty-copy">当前半径内没有可展示地震。</p> : null}
+            {!quakeListRows.length ? <p className="empty-copy">当前半径内没有可展示地震。</p> : null}
           </div>
         </section>
       </aside>

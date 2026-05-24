@@ -25,6 +25,12 @@
   --danger-bg: #fde3e7;
   --unknown: #607078;
   --unknown-bg: #e8eef1;
+  --control-bg: #e5eeee;
+  --control-bg-2: #dce9e8;
+  --control-bg-hover: #d4e6e4;
+  --control-active-bg: #c9e5e1;
+  --control-ring: rgba(11, 129, 122, 0.14);
+  --control-text: #24464a;
   --shadow: 0 12px 28px rgba(23, 33, 36, 0.07);
   --shadow-hover: 0 22px 48px rgba(16, 41, 45, 0.15);
   --popover-shadow: 0 18px 34px rgba(16, 41, 45, 0.16);
@@ -65,6 +71,12 @@
   --danger-bg: rgba(255, 120, 132, 0.14);
   --unknown: #b3c2c7;
   --unknown-bg: rgba(179, 194, 199, 0.14);
+  --control-bg: #21343a;
+  --control-bg-2: #263d43;
+  --control-bg-hover: #2b484e;
+  --control-active-bg: #1d554f;
+  --control-ring: rgba(123, 217, 206, 0.18);
+  --control-text: #e5f2f3;
   --shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
   --shadow-hover: 0 24px 58px rgba(0, 0, 0, 0.34);
   --popover-shadow: 0 20px 42px rgba(0, 0, 0, 0.42);
@@ -890,18 +902,24 @@ p {
 .radius-pills button,
 .source-toggle,
 .chip-button,
-.map-preview-open {
+.map-preview-open,
+.quake-tabs button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 28%, transparent), transparent 72%),
+    var(--control-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--control-ring),
+    0 5px 14px rgba(16, 41, 45, 0.04);
+  color: var(--control-text);
   line-height: 1;
   white-space: nowrap;
-  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+  transition: background 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
 .volcano-select svg,
@@ -912,7 +930,8 @@ p {
 .radius-pills button svg,
 .source-toggle svg,
 .chip-button svg,
-.map-preview-open svg {
+.map-preview-open svg,
+.quake-tabs button svg {
   flex: 0 0 auto;
 }
 
@@ -963,14 +982,25 @@ p {
 .camera-mode button:hover,
 .radius-pills button:hover,
 .source-toggle:hover,
-.chip-button:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+.chip-button:hover,
+.quake-tabs button:hover {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 22%, transparent), transparent 70%),
+    var(--control-bg-hover);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 9px 22px rgba(16, 41, 45, 0.08);
   color: var(--accent);
 }
 
-.chip-button.is-active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+.chip-button.is-active,
+.quake-tabs button.is-active {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 20%, transparent), transparent 70%),
+    var(--control-active-bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+    0 10px 24px rgba(16, 41, 45, 0.09);
   color: var(--accent);
 }
 
@@ -982,7 +1012,8 @@ p {
 
 .icon-action:hover svg,
 .chip-button:hover svg,
-.panel-head button:hover svg {
+.panel-head button:hover svg,
+.quake-tabs button:hover svg {
   transform: translateY(-1px) scale(1.05);
 }
 
@@ -995,8 +1026,12 @@ p {
 }
 
 .notification-button.has-unread {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 18%, transparent), transparent 70%),
+    var(--control-active-bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+    0 10px 22px rgba(16, 41, 45, 0.08);
   color: var(--accent);
 }
 
@@ -1076,16 +1111,17 @@ p {
   width: 28px;
   height: 28px;
   place-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--muted);
+  background: var(--control-bg);
+  box-shadow: inset 0 0 0 1px var(--control-ring);
+  color: var(--control-text);
 }
 
 .notification-popover__head button:hover,
 .notification-item button:hover,
 .notification-toast button:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--control-bg-hover);
   color: var(--accent);
 }
 
@@ -1103,15 +1139,16 @@ p {
   align-items: center;
   min-height: 46px;
   padding: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--surface) 82%, var(--surface-2));
+  background: var(--control-bg);
+  box-shadow: inset 0 0 0 1px var(--control-ring);
   cursor: pointer;
 }
 
 .notification-switch.is-active {
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  background: var(--control-active-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent);
 }
 
 .notification-switch__icon {
@@ -1216,10 +1253,11 @@ p {
   display: inline-flex;
   min-height: 28px;
   align-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--muted);
+  background: var(--control-bg);
+  box-shadow: inset 0 0 0 1px var(--control-ring);
+  color: var(--control-text);
   cursor: pointer;
 }
 
@@ -1230,8 +1268,8 @@ p {
 }
 
 .notification-channels label.is-active {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  background: var(--control-active-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent);
   color: var(--accent);
 }
 
@@ -1402,7 +1440,8 @@ p {
 .radius-pills button:active,
 .source-toggle:active,
 .chip-button:active,
-.map-preview-open:active {
+.map-preview-open:active,
+.quake-tabs button:active {
   transform: translateY(1px);
 }
 
@@ -1425,7 +1464,7 @@ p {
   gap: 8px;
   padding: 0 10px;
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--control-bg);
   color: var(--muted);
   font-size: 12px;
   font-style: normal;
@@ -1438,7 +1477,9 @@ p {
 }
 
 .time-bar em {
-  border: 1px solid color-mix(in srgb, var(--watch) 28%, var(--border));
+  border: 1px solid transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--watch) 20%, transparent);
+  background: var(--watch-bg);
   color: var(--watch);
 }
 
@@ -2373,7 +2414,7 @@ p {
 }
 
 .map-preview-open:hover {
-  border-color: var(--accent);
+  background: var(--control-bg-hover);
   color: var(--accent);
 }
 
@@ -3125,8 +3166,12 @@ p {
 .map-control button.is-active,
 .camera-mode button.is-active,
 .radius-pills button.is-active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 20%, transparent), transparent 70%),
+    var(--control-active-bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+    0 10px 22px rgba(16, 41, 45, 0.08);
   color: var(--accent);
 }
 
@@ -3221,16 +3266,36 @@ p {
   gap: 10px;
   align-items: center;
   padding: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: var(--surface-2);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 20%, transparent), transparent 72%),
+    var(--control-bg);
+  box-shadow: inset 0 0 0 1px var(--control-ring);
   color: var(--ink);
   text-align: left;
 }
 
 .quake-button.is-active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 18%, transparent), transparent 70%),
+    var(--control-active-bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+    inset 4px 0 0 var(--accent);
+}
+
+.quake-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.quake-tabs button {
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 780;
 }
 
 .quake-button strong {
@@ -3344,10 +3409,15 @@ p {
   min-height: 34px;
   gap: 7px;
   padding: 0 12px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 22%, transparent), transparent 72%),
+    var(--control-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--control-ring),
+    0 5px 14px rgba(16, 41, 45, 0.04);
+  color: var(--control-text);
   font-size: 12px;
   font-weight: 780;
   text-decoration: none;
@@ -3357,8 +3427,12 @@ p {
 .viewing-hero__actions a:hover,
 .crater-tabs button:hover,
 .crater-tabs button.is-active {
-  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #fff 18%, transparent), transparent 70%),
+    var(--control-active-bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent),
+    0 9px 22px rgba(16, 41, 45, 0.08);
   color: var(--accent);
 }
 
@@ -3814,9 +3888,10 @@ p {
 }
 
 .camera-thumb.is-active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: var(--control-active-bg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+    inset 4px 0 0 var(--accent);
 }
 
 .camera-thumb img {
