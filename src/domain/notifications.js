@@ -153,7 +153,7 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
         type: 'earthquake',
         tone: earthquakeTone(magnitude),
         title: `${volcanoName} 近期强震 M${magnitude.toFixed(1)}`,
-        body: `${place}，震源深度 ${depthKm.toFixed(1)} km。请核对 USGS 和当地应急通知。`,
+        body: `${place}，震源深度 ${depthKm.toFixed(1)} km / USGS`,
         meta: formatDateTime(quake.time ?? generatedAt, dashboard.timeZone ?? 'Pacific/Honolulu'),
         sourceUrl: quake.url ?? sourceUrl,
       });
@@ -228,7 +228,7 @@ export function buildDashboardNotifications({ dashboard, selectedVolcano, prefer
       type: 'sources',
       tone: 'unknown',
       title: `${volcanoName} 数据源降级`,
-      body: '部分公开信息暂时不可用，页面会继续使用最近可用内容。',
+      body: '来源需复核',
       meta: '更新状态',
       sourceUrl,
     });

@@ -22,7 +22,6 @@ import {
   activitySignalValue,
   buildWindowDays,
   cnColor,
-  cnOfficialText,
   cnStatus,
   dateKeyInZone,
   eruptionTone,
@@ -76,7 +75,6 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
   const coordinates = getCoordinates(dashboard, selectedVolcano);
   const sourceUrl = displayWindow?.url ?? dashboard.latestAdvisory?.url ?? context.officialLinks?.hans ?? context.officialLinks?.hvoUpdates ?? volcano?.officialUrl;
   const cameraUrl = latestCamera?.imageUrl ? `${latestCamera.imageUrl}?t=${encodeURIComponent(dashboard.generatedAt ?? '')}` : '';
-  const officialSummary = cnOfficialText(status.summary, status);
   const compactEruption = String(eruption.label ?? '监测中').replace(/^喷发/, '') || eruption.label;
   const heroTitle = displayWindow?.episodeNumber
     ? `${primaryVolcanoName(volcano?.name)}：EP ${displayWindow.episodeNumber}${isModelWindow ? ' 候选窗口' : ' 官方窗口'}`
@@ -89,8 +87,8 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
       value: cnStatus(status.level),
       meta: 'USGS/HVO',
       title: '火山警戒等级',
-      description: '官方火山状态的第一优先读数。',
-      detail: '以 USGS/HVO 公告为准；用于判断是否需要提高行程关注级别。',
+      description: 'USGS/HVO',
+      detail: 'USGS/HVO',
       sourceUrl,
       facts: [
         { label: '等级', value: cnStatus(status.level), tone: statusTone(status.level, status.colorCode) },
@@ -105,8 +103,8 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
       value: cnColor(status.colorCode),
       meta: 'Aviation',
       title: '航空颜色代码',
-      description: '面向飞行风险核验的官方颜色代码。',
-      detail: '颜色代码反映火山灰、喷发活动及航空相关风险等级；旅行决策仍需核验官方公告。',
+      description: 'Aviation',
+      detail: 'Aviation',
       sourceUrl,
       facts: [
         { label: '颜色', value: cnColor(status.colorCode), tone: statusTone(status.level, status.colorCode) },
@@ -121,8 +119,8 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
       value: compactEruption,
       meta: isModelWindow ? '暂停 / 候选窗口' : 'HVO 当前文本',
       title: '当前喷发状态',
-      description: '喷发、暂停或未喷发状态优先来自 HVO 当前活动文字。',
-      detail: isModelWindow ? '官方喷发状态为暂停；下一 EP 窗口仍需等待官方确认。' : '来自 HVO 当前活动文字。',
+      description: 'HVO',
+      detail: isModelWindow ? '待确认' : 'HVO',
       sourceUrl,
       facts: [
         { label: '状态', value: compactEruption, tone: eruptionTone(eruption.state) },
@@ -138,8 +136,8 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
       sub: '综合信号',
       meta: band.label,
       title: '活动信号指数',
-      description: '将公开火山、地震和天气信息整理成单一可视信号。',
-      detail: '综合公开状态、地震与天气信号。',
+      description: 'Signal',
+      detail: band.label,
       sourceUrl,
       facts: [
         { label: '指数', value: `${signal}/100`, tone: band.tone },
@@ -153,9 +151,8 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
     <div className="today-grid">
       <section className="status-hero">
         <div className="hero-copy">
-          <span className="source-chip"><RadioTower size={15} />USGS/HVO 官方状态</span>
+          <span className="source-chip"><RadioTower size={15} />USGS/HVO</span>
           <h1>{heroTitle}</h1>
-          <p>{officialSummary}</p>
         </div>
         <div className="hero-window-line" aria-label="EP 窗口摘要">
           <span>
@@ -172,10 +169,10 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
           </span>
         </div>
         <div className="hero-decision-chain" aria-label="追火山核验链">
-          <span><i>01</i><strong>官方状态</strong><em>{cnStatus(status.level)} / {cnColor(status.colorCode)}</em></span>
-          <span><i>02</i><strong>EP窗口</strong><em>{displayWindow?.episodeNumber ? `EP ${displayWindow.episodeNumber}${isModelWindow ? ' 候选' : ''}` : '未发布'}</em></span>
-          <span><i>03</i><strong>画面与天气</strong><em>{latestCamera?.code ?? 'HVO'} / {weather.current ? translateForecast(weather.current?.shortForecast) : '待更新'}</em></span>
-          <span><i>04</i><strong>出发核验</strong><em>NPS / 道路 / 官方入口</em></span>
+          <span><i>01</i><strong>HVO</strong><em>{cnStatus(status.level)} / {cnColor(status.colorCode)}</em></span>
+          <span><i>02</i><strong>EP</strong><em>{displayWindow?.episodeNumber ? `EP ${displayWindow.episodeNumber}${isModelWindow ? ' 候选' : ''}` : '未发布'}</em></span>
+          <span><i>03</i><strong>影像 / 天气</strong><em>{latestCamera?.code ?? 'HVO'} / {weather.current ? translateForecast(weather.current?.shortForecast) : '待更新'}</em></span>
+          <span><i>04</i><strong>NPS</strong><em>道路 / 开放</em></span>
         </div>
         <div className="hero-metrics">
           {metricCards.map((card) => (
@@ -233,7 +230,7 @@ export function TodayView({ dashboard, selectedVolcano, timeZone, onNavigate }) 
           </div>
         </div>
         <footer>
-          <span>{isModelWindow ? '参考窗口，需以 HVO 后续通报确认' : currentWindowState.label}</span>
+          <span>{isModelWindow ? '待 HVO 确认' : currentWindowState.label}</span>
           {previousWindow?.episodeNumber ? <em>上一官方 EP {previousWindow.episodeNumber} / {formatWindowLabel(previousWindow)}</em> : null}
           {sourceUrl ? <a href={sourceUrl} target="_blank" rel="noreferrer">HVO 原文 <ExternalLink size={13} /></a> : null}
         </footer>
@@ -472,10 +469,10 @@ function MapPreview({ coordinates, quakes, onNavigate }) {
     <div className="home-map-preview">
       <div className="home-leaflet-map" ref={elementRef} aria-label="首页真实地图预览" />
       <button className="map-preview-open" type="button" onClick={() => onNavigate('map')}>
-        <MapPinned size={14} /> 打开筛选地图
+        <MapPinned size={14} /> 地图
       </button>
       <span className={`map-preview-state is-${tileState}`}>
-        {tileState === 'loading' ? '瓦片加载中' : tileState === 'fallback' ? '备用 OSM 瓦片' : 'Esri 地形瓦片'}
+        {tileState === 'loading' ? '加载中' : tileState === 'fallback' ? 'OSM' : 'Esri'}
       </span>
     </div>
   );

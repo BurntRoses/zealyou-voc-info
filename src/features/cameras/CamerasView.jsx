@@ -43,8 +43,8 @@ export function CamerasView({ dashboard }) {
       <section className="panel camera-main">
         <div className="camera-toolbar">
           <div>
-            <strong>HVO 官方摄像头</strong>
-            <span>{primaryVolcanoName(dashboard.volcano?.name)} / 夏威夷时间 {hawaiiClock}</span>
+            <strong>HVO</strong>
+            <span>{primaryVolcanoName(dashboard.volcano?.name)} / HST {hawaiiClock}</span>
           </div>
           <div className="camera-mode" aria-label="摄像头模式">
             {cameraModes.map((item) => (
@@ -74,19 +74,19 @@ export function CamerasView({ dashboard }) {
               }}
             />
           ) : null}
-          {loading && activeCamera ? <div className="media-state">正在加载 HVO 官方画面</div> : null}
-          {failed ? <div className="media-state">图像加载失败。请刷新或打开 HVO 官方页面。</div> : null}
-          {!activeCamera || !imageUrl ? <div className="media-state">未返回 HVO 摄像头清单</div> : null}
+          {loading && activeCamera ? <div className="media-state">加载中</div> : null}
+          {failed ? <div className="media-state">加载失败</div> : null}
+          {!activeCamera || !imageUrl ? <div className="media-state">无机位</div> : null}
         </div>
 
         <div className="camera-meta">
           <div>
             <strong>{activeCamera?.label ?? 'HVO 摄像头'}</strong>
-            <span>{activeCamera?.role ?? '官方画面'} / {activeCamera?.code ?? '--'}</span>
+            <span>{activeCamera?.role ?? 'HVO'} / {activeCamera?.code ?? '--'}</span>
           </div>
           {activeCamera?.pageUrl || webcamSet?.sourcePage ? (
             <a className="external-link" href={activeCamera?.pageUrl ?? webcamSet.sourcePage} target="_blank" rel="noreferrer">
-              官方来源 <ExternalLink size={13} />
+              HVO <ExternalLink size={13} />
             </a>
           ) : null}
         </div>
@@ -94,7 +94,7 @@ export function CamerasView({ dashboard }) {
 
       <aside className="panel">
         <header className="panel-head">
-          <span><Camera size={17} />全部机位</span>
+          <span><Camera size={17} />机位</span>
           <strong className="tag">{cameras.length} 个</strong>
         </header>
         <div className="camera-list">
@@ -116,11 +116,11 @@ export function CamerasView({ dashboard }) {
               />
               <span>
                 <strong>{camera.code} / {camera.label}</strong>
-                <em>{camera.role ?? 'HVO 官方摄像头'}</em>
+                <em>{camera.role ?? 'HVO'}</em>
               </span>
             </button>
           ))}
-          {!cameras.length ? <p className="empty-copy">未返回摄像头清单。</p> : null}
+          {!cameras.length ? <p className="empty-copy">无机位</p> : null}
         </div>
       </aside>
     </div>

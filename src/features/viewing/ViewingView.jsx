@@ -13,7 +13,6 @@ import {
   RadioTower,
   Route,
   ShieldCheck,
-  Wind,
 } from 'lucide-react';
 import { craterActivityImages, mapLayers, viewingLocations } from '../../domain/config.js';
 import {
@@ -59,23 +58,19 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
     <div className="viewing-view">
       <section className="viewing-hero panel">
         <div className="viewing-hero__copy">
-          <span className="source-chip"><Eye size={15} />火山口活动与观赏决策</span>
-          <h1>{primaryVolcanoName(dashboard.volcano?.name ?? selectedVolcano?.name)} 观赏指挥台</h1>
-          <p>
-            把 USGS/HVO 状态、峰顶倾斜图、HVO 摄像头、NOAA 天气和 NPS 开放核验放在同一页；
-            这里给出可执行的观赏位置排序，但不替代官方安全与封闭公告。
-          </p>
+          <span className="source-chip"><Eye size={15} />HVO · UWD · NPS</span>
+          <h1>{primaryVolcanoName(dashboard.volcano?.name ?? selectedVolcano?.name)} 观赏</h1>
         </div>
         <div className="viewing-hero__actions">
           <button type="button" onClick={() => onNavigate?.('cameras')}>
-            <Camera size={16} />看摄像头
+            <Camera size={16} />影像
           </button>
           <button type="button" onClick={() => onNavigate?.('map')}>
-            <MapPinned size={16} />地震地图
+            <MapPinned size={16} />地震
           </button>
           {sourceUrl ? (
             <a href={sourceUrl} target="_blank" rel="noreferrer">
-              <RadioTower size={16} />HVO 原文
+              <RadioTower size={16} />HVO
             </a>
           ) : null}
         </div>
@@ -85,7 +80,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
         <ReadinessCard
           icon={ShieldCheck}
           tone={statusTone(status.level, status.colorCode)}
-          label="官方状态"
+          label="状态"
           value={`${cnStatus(status.level)} / ${cnColor(status.colorCode)}`}
           detail={status.agency ?? 'USGS/HVO'}
         />
@@ -99,14 +94,14 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
         <ReadinessCard
           icon={CloudRain}
           tone={weatherAlerts.length ? 'watch' : 'good'}
-          label="天气能见度"
+          label="天气"
           value={weather.current ? translateForecast(weather.current.shortForecast) : '暂无预报'}
           detail={weatherAlerts.length ? `${weatherAlerts.length} 条 NOAA/NWS 提醒` : `${weather.windDirection || '--'} ${weather.wind}`}
         />
         <ReadinessCard
           icon={Crosshair}
           tone={context.earthquakeSummary?.maxMagnitude >= 4 ? 'watch' : 'notice'}
-          label="近场地震"
+          label="地震"
           value={`${context.earthquakeSummary?.count ?? dashboard.earthquakes?.length ?? 0} 条`}
           detail={context.earthquakeSummary?.maxMagnitude ? `最大 M${Number(context.earthquakeSummary.maxMagnitude).toFixed(1)}` : 'USGS 7 日'}
         />
@@ -115,7 +110,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
       <section className="viewing-main-grid">
         <article className="panel crater-activity-card">
           <header className="panel-head">
-            <span><Gauge size={17} />火山口活动图</span>
+            <span><Gauge size={17} />活动图</span>
             <strong className="tag">USGS UWD</strong>
           </header>
           <div className="crater-tabs" aria-label="火山口活动图时间范围">
@@ -139,7 +134,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
                 <strong>{image.title}</strong>
                 <span>{image.description}</span>
                 <a href={image.sourceUrl} target="_blank" rel="noreferrer">
-                  USGS 监测数据 <ExternalLink size={13} />
+                  USGS <ExternalLink size={13} />
                 </a>
               </div>
             </>
@@ -148,23 +143,23 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
 
         <aside className="panel viewing-decision-card">
           <header className="panel-head">
-            <span><Navigation size={17} />当前观赏判断</span>
+            <span><Navigation size={17} />观赏</span>
             <strong className={`tag tag-${band.tone}`}>{band.label}</strong>
           </header>
           <div className="decision-stack">
-            <DecisionRow label="喷发状态" value={eruption.label ?? '监测中'} />
+            <DecisionRow label="喷发" value={eruption.label ?? '监测中'} />
             <DecisionRow
-              label="EP 窗口"
-              value={activeWindow?.episodeNumber ? `EP ${activeWindow.episodeNumber} / ${formatWindowLabel(activeWindow)}` : '未发布官方短期窗口'}
+              label="EP"
+              value={activeWindow?.episodeNumber ? `EP ${activeWindow.episodeNumber} / ${formatWindowLabel(activeWindow)}` : '未发布'}
             />
-            <DecisionRow label="HVO 摄像头" value={`${cameraCount} 个机位可核验`} />
-            <DecisionRow label="夏威夷时间" value={formatDateTime(dashboard.generatedAt, hstZone)} />
+            <DecisionRow label="机位" value={`${cameraCount}`} />
+            <DecisionRow label="HST" value={formatDateTime(dashboard.generatedAt, hstZone)} />
           </div>
-          <div className="decision-note">
+          <div className="decision-note decision-note--compact">
             <AlertTriangle size={18} aria-hidden="true" />
-            <p>
-              倾斜上升、夜间辉光或地震增加只说明活动背景变化；是否喷发、是否开放、能否通行，最终以 USGS/HVO、NPS 和当地部门公告为准。
-            </p>
+            <span>USGS/HVO</span>
+            <span>NPS</span>
+            <span>NOAA/NWS</span>
           </div>
         </aside>
       </section>
@@ -172,7 +167,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
       <section className="viewing-locations-grid">
         <article className="panel viewing-map-panel">
           <header className="panel-head">
-            <span><MapPinned size={17} />最佳观赏位置地图</span>
+            <span><MapPinned size={17} />观赏点</span>
             <strong className="tag">{locations.length} 个点位</strong>
           </header>
           <ViewingMap
@@ -185,7 +180,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
 
         <aside className="panel location-list-panel">
           <header className="panel-head">
-            <span><Route size={17} />排序与建议</span>
+            <span><Route size={17} />排序</span>
             <strong className="tag">{isNight ? '夜间模式' : '白天模式'}</strong>
           </header>
           <div className="location-list">
@@ -218,7 +213,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
           <div className="selected-location-grid">
             <InfoBlock label="交通与抵达" value={selectedLocation.access} />
             <InfoBlock label="最佳时间" value={selectedLocation.timing} />
-            <InfoBlock label="距离火山口" value={`约 ${selectedLocation.distanceKm} km，实际路线以 NPS 标识为准`} />
+            <InfoBlock label="距离" value={`~ ${selectedLocation.distanceKm} km`} />
           </div>
           <div className="tag-row">
             {selectedLocation.tags.map((tag) => <span key={tag}>{tag}</span>)}
@@ -230,7 +225,7 @@ export function ViewingView({ dashboard, selectedVolcano, timeZone = hstZone, on
           </div>
           <footer>
             <a href={selectedLocation.sourceUrl} target="_blank" rel="noreferrer">
-              NPS 观赏与开放状态 <ExternalLink size={13} />
+              NPS <ExternalLink size={13} />
             </a>
           </footer>
         </section>
@@ -329,7 +324,7 @@ function ViewingMap({ coordinates, locations, selectedLocation, onSelect }) {
         iconAnchor: [12, 12],
       }),
       title: 'Halemaumau 火山口',
-    }).addTo(markerLayer).bindPopup('<strong>Halemaumau 火山口</strong><br/>观赏点以官方开放状态为准');
+    }).addTo(markerLayer).bindPopup('<strong>Halemaumau</strong><br/>NPS');
 
     locations.forEach((location, index) => {
       const marker = L.marker([location.coordinates.lat, location.coordinates.lon], {

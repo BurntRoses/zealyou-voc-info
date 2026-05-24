@@ -217,7 +217,7 @@ function buildMockDashboard(volcano, options) {
     },
     weatherAlerts: [],
     assessment: {
-      disclaimer: '参考信息来自公开资料整理。',
+      disclaimer: 'USGS/HVO · NPS · NOAA/NWS',
       likelihood: { label: 'elevated', score: options.signal },
       timeframe: activeWindow?.type === 'model' ? 'model_estimate_window' : (options.officialWindow ? 'official_notice_window' : 'no_short_term_official_window'),
       confidence: { label: 'moderate', score: 0.6 },
@@ -251,7 +251,7 @@ function buildMockDashboard(volcano, options) {
       { id: 'nps-havo', label: 'Hawaii Volcanoes National Park Alerts', url: 'https://www.nps.gov/havo/planyourvisit/conditions.htm', status: 'reference' },
     ],
     diagnostics: { degraded: false, errors: [] },
-    disclaimer: '本页汇总公开信息；安全、通行与航空判断以 USGS/HVO、NOAA/NWS、NPS 及当地部门公告为准。',
+    disclaimer: 'USGS/HVO · NPS · NOAA/NWS',
   };
 }
 

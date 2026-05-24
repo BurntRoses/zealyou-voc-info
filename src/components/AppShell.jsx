@@ -21,7 +21,17 @@ import {
   X,
 } from 'lucide-react';
 import { views } from '../domain/config.js';
-import { cnColor, cnStatus, eruptionTone, formatDateTime, formatWindowLabel, primaryVolcanoName, resolveEruptionState, statusTone } from '../domain/formatters.js';
+import {
+  cnColor,
+  cnStatus,
+  eruptionTone,
+  formatDateTime,
+  formatWindowLabel,
+  isValidTimeZone,
+  primaryVolcanoName,
+  resolveEruptionState,
+  statusTone,
+} from '../domain/formatters.js';
 import { defaultNotificationPreferences } from '../domain/notifications.js';
 import { useLiveClock } from '../hooks/useLiveClock.js';
 import { TimeZonePicker } from './TimeZonePicker.jsx';
@@ -38,7 +48,15 @@ const viewIcons = {
 const secondaryTimeZones = [
   { value: 'Asia/Shanghai', label: '北京时间', shortLabel: '北京' },
   { value: 'Asia/Tokyo', label: '东京时间', shortLabel: '东京' },
+  { value: 'Asia/Seoul', label: '首尔时间', shortLabel: '首尔' },
+  { value: 'Asia/Singapore', label: '新加坡时间', shortLabel: '新加坡' },
+  { value: 'Asia/Hong_Kong', label: '香港时间', shortLabel: '香港' },
+  { value: 'Australia/Sydney', label: '悉尼时间', shortLabel: '悉尼' },
+  { value: 'Europe/London', label: '伦敦时间', shortLabel: '伦敦' },
+  { value: 'Europe/Paris', label: '巴黎时间', shortLabel: '巴黎' },
   { value: 'America/Los_Angeles', label: '洛杉矶时间', shortLabel: '洛杉矶' },
+  { value: 'America/Denver', label: '丹佛时间', shortLabel: '丹佛' },
+  { value: 'America/Chicago', label: '芝加哥时间', shortLabel: '芝加哥' },
   { value: 'America/New_York', label: '纽约时间', shortLabel: '纽约' },
   { value: 'UTC', label: 'UTC', shortLabel: 'UTC' },
 ];
@@ -74,9 +92,7 @@ export function AppShell({
   const activeWindow = context.activeWindow ?? context.modelWindow ?? context.officialWindow;
   const activeWindowIsModel = activeWindow?.type === 'model';
   const previousWindow = activeWindowIsModel ? (context.lastOfficialWindow ?? context.officialWindow) : null;
-  const resolvedSecondaryZone = secondaryTimeZones.some((zone) => zone.value === secondaryTimeZone)
-    ? secondaryTimeZone
-    : 'Asia/Shanghai';
+  const resolvedSecondaryZone = isValidTimeZone(secondaryTimeZone) ? secondaryTimeZone : 'Asia/Shanghai';
   const compactClockOptions = { seconds: false, weekday: false };
   const hstClock = useLiveClock('Pacific/Honolulu', 'zh-CN', compactClockOptions);
   const secondaryClock = useLiveClock(resolvedSecondaryZone, 'zh-CN', compactClockOptions);
@@ -85,10 +101,10 @@ export function AppShell({
   const eruptionClass = eruptionTone(eruption.state);
   const compactEruptionLabel = String(eruption.label ?? '监测中').replace(/^喷发/, '') || eruption.label;
   const activeWindowText = activeWindow?.episodeNumber
-    ? `EP ${activeWindow.episodeNumber}${activeWindowIsModel ? ' 参考' : ''} · ${compactWindowRange(activeWindow)} · ${activeWindowIsModel ? '待官方确认' : '官方'}`
+    ? `EP ${activeWindow.episodeNumber}${activeWindowIsModel ? ' 候选' : ''} · ${compactWindowRange(activeWindow)}`
     : '';
   const activeWindowTitle = previousWindow?.episodeNumber
-    ? `${formatWindowLabel(activeWindow)}，EP ${previousWindow.episodeNumber} 官方窗口已转历史`
+    ? `${formatWindowLabel(activeWindow)}，上一官方 EP ${previousWindow.episodeNumber}`
     : formatWindowLabel(activeWindow);
   const NotificationIcon = notificationUnreadCount ? BellRing : Bell;
 
@@ -122,11 +138,11 @@ export function AppShell({
   return (
     <main className="app-shell">
       <aside className="side-nav" aria-label="主导航">
-        <a className="brand-block" href="?view=today" aria-label="返回首页">
+        <a className="brand-block" href="?view=today" aria-label="首页">
           <span className="brand-icon"><Mountain size={22} aria-hidden="true" /></span>
           <span>
-            <strong>Hawaii Volcano Watch</strong>
-            <small>USGS/HVO 优先</small>
+            <strong>Hawaii Volcano</strong>
+            <small>USGS/HVO</small>
           </span>
         </a>
 
@@ -139,6 +155,7 @@ export function AppShell({
                 key={view.id}
                 type="button"
                 aria-current={activeView === view.id ? 'page' : undefined}
+                title={view.label}
                 onClick={() => onViewChange(view.id)}
               >
                 <Icon size={18} aria-hidden="true" />
@@ -152,9 +169,9 @@ export function AppShell({
         </div>
 
         <div className="side-source">
-          <span>公开信息核验</span>
+          <span>LIVE</span>
           <strong>USGS/HVO</strong>
-          <em>安全与通行以官方公告为准</em>
+          <em>NPS · NOAA</em>
         </div>
       </aside>
 
@@ -166,7 +183,7 @@ export function AppShell({
           </div>
 
           <div className="top-center">
-            <div className="status-strip" aria-label="当前状态">
+            <div className="status-strip" aria-label="状态">
               <span className={`status-pill status-pill--${statusClass}`}>
                 <i aria-hidden="true" />
                 火山 {cnStatus(status.level)}
@@ -184,11 +201,11 @@ export function AppShell({
               ) : null}
               <span className="status-pill">
                 <Clock3 size={14} aria-hidden="true" />
-                更新 {updatedAt}
+                {updatedAt}
               </span>
             </div>
             <div className="top-timebar" aria-label="时间">
-              <span><Clock3 size={13} aria-hidden="true" /><strong>夏威夷</strong>{hstClock}</span>
+              <span><Clock3 size={13} aria-hidden="true" /><strong>HST</strong>{hstClock}</span>
               <TimeZonePicker
                 zones={secondaryTimeZones}
                 value={resolvedSecondaryZone}
@@ -200,14 +217,14 @@ export function AppShell({
           </div>
 
           <div className="top-controls" ref={notificationRootRef}>
-            <div className="volcano-select is-fixed" aria-label="当前火山">
+            <div className="volcano-select is-fixed" aria-label="火山">
               <span>火山</span>
               <strong>{primaryVolcanoName(selectedVolcano?.name ?? dashboard?.volcano?.name)}</strong>
             </div>
             <button
               className={`icon-action notification-button ${notificationUnreadCount ? 'has-unread' : ''}`}
               type="button"
-              title="通知设置与记录"
+              title="通知"
               aria-haspopup="dialog"
               aria-expanded={notificationOpen}
               onClick={() => setNotificationOpen((current) => !current)}
@@ -216,11 +233,11 @@ export function AppShell({
               <span>通知</span>
               {notificationUnreadCount ? <em className="notification-badge">{Math.min(notificationUnreadCount, 9)}</em> : null}
             </button>
-            <button className="icon-action" type="button" title={theme === 'dark' ? '切换浅色' : '切换暗色'} onClick={() => onPreferenceChange?.({ theme: theme === 'dark' ? 'light' : 'dark' })}>
+            <button className="icon-action" type="button" title={theme === 'dark' ? '浅色' : '夜间'} onClick={() => onPreferenceChange?.({ theme: theme === 'dark' ? 'light' : 'dark' })}>
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              <span>{theme === 'dark' ? '浅色' : '暗色'}</span>
+              <span>{theme === 'dark' ? '浅色' : '夜间'}</span>
             </button>
-            <button className="icon-action" type="button" title="刷新数据" onClick={onRefresh} disabled={loading}>
+            <button className="icon-action" type="button" title="刷新" onClick={onRefresh} disabled={loading}>
               <RefreshCcw size={16} />
               <span>刷新</span>
             </button>
@@ -264,15 +281,15 @@ function NotificationPanel({
   const channelLabels = [
     ['earthquakes', '强震'],
     ['tsunami', '海啸'],
-    ['status', '官方警戒'],
-    ['windows', 'EP 窗口'],
-    ['signal', '活动信号'],
-    ['weather', '天气提醒'],
-    ['sources', '数据源'],
+    ['status', '警戒'],
+    ['windows', 'EP'],
+    ['signal', '信号'],
+    ['weather', '天气'],
+    ['sources', '来源'],
   ];
 
   return (
-    <section className="notification-popover" role="dialog" aria-label="通知设置与记录">
+    <section className="notification-popover" role="dialog" aria-label="通知">
       <header className="notification-popover__head">
         <span>
           <Bell size={16} aria-hidden="true" />
@@ -280,10 +297,10 @@ function NotificationPanel({
           {unreadCount ? <em>{unreadCount} 未读</em> : <em>已同步</em>}
         </span>
         <div>
-          <button type="button" title="全部标为已读" onClick={onMarkRead} disabled={!items.length}>
+          <button type="button" title="标记已读" onClick={onMarkRead} disabled={!items.length}>
             <CheckCheck size={15} />
           </button>
-          <button type="button" title="清空通知" onClick={onClear} disabled={!items.length}>
+          <button type="button" title="清空" onClick={onClear} disabled={!items.length}>
             <Trash2 size={15} />
           </button>
         </div>
@@ -292,14 +309,14 @@ function NotificationPanel({
       <div className="notification-settings">
         <SwitchRow
           icon={MonitorUp}
-          label="页面内通知"
-          detail="铃铛未读、站内记录和浮层提示"
+          label="站内"
+          detail="铃铛 · 浮层"
           checked={prefs.inPage}
           onChange={(inPage) => onPreferenceChange?.({ inPage })}
         />
 
         <label className="notification-range">
-          <span><SlidersHorizontal size={14} />活动信号阈值<strong>{prefs.signalThreshold}/100</strong></span>
+          <span><SlidersHorizontal size={14} />阈值 <strong>{prefs.signalThreshold}/100</strong></span>
           <input
             type="range"
             min="1"
@@ -328,7 +345,7 @@ function NotificationPanel({
         {items.length ? items.map((item) => (
           <NotificationItem item={item} key={item.id} onDismiss={onDismiss} />
         )) : (
-          <p className="notification-empty">还没有触发通知。刷新数据或调低阈值后会自动记录。</p>
+          <p className="notification-empty">暂无记录</p>
         )}
       </div>
     </section>
@@ -354,7 +371,7 @@ function NotificationItem({ item, onDismiss }) {
     <article className={`notification-item tone-${item.tone ?? 'notice'} ${item.read ? '' : 'is-unread'}`}>
       <header>
         <strong>{item.title}</strong>
-        <button type="button" title="移除此条" onClick={() => onDismiss?.(item.id)}>
+        <button type="button" title="移除" onClick={() => onDismiss?.(item.id)}>
           <X size={14} />
         </button>
       </header>
@@ -401,7 +418,7 @@ function compactWindowRange(window) {
   return formatWindowLabel(window)
     .replace(/\s*2026\b/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/链\s*/g, '/')
+    .replace(/\s*至\s*/g, '/')
     .replace(/\s*日/g, '')
     .trim();
 }

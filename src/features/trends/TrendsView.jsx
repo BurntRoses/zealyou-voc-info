@@ -67,8 +67,8 @@ export function TrendsView({ dashboard, timeZone }) {
       value: activeWindow?.episodeNumber ? `EP ${activeWindow.episodeNumber}${isModelWindow ? ' 候选' : ''}` : '未发布',
       meta: `${activeRange} HST`,
       title: isModelWindow ? '下一候选 EP 窗口' : '当前官方 EP 窗口',
-      description: isModelWindow ? '来自公开通报整理的参考窗口。' : 'USGS/HVO 官方窗口，优先显示。',
-      detail: isModelWindow ? '下一 EP 参考范围需等待官方确认。' : '当前可核验的官方短期窗口。',
+      description: isModelWindow ? '候选' : 'USGS/HVO',
+      detail: isModelWindow ? '待确认' : 'USGS/HVO',
       sourceUrl,
       facts: [
         { label: 'EP', value: activeWindow?.episodeNumber ? `EP ${activeWindow.episodeNumber}` : '--', tone: isModelWindow ? 'watch' : 'good' },
@@ -83,8 +83,8 @@ export function TrendsView({ dashboard, timeZone }) {
       value: officialWindow?.episodeNumber ? `EP ${officialWindow.episodeNumber}` : '--',
       meta: `${officialRange} HST`,
       title: '上一官方 EP 窗口',
-      description: '已转入历史序列，用于和下一候选窗口对照。',
-      detail: '上一官方窗口已退回历史，不再作为当前判读窗口。',
+      description: '历史',
+      detail: '历史',
       sourceUrl,
       facts: [
         { label: 'EP', value: officialWindow?.episodeNumber ? `EP ${officialWindow.episodeNumber}` : '--', tone: 'notice' },
@@ -99,8 +99,8 @@ export function TrendsView({ dashboard, timeZone }) {
       value: `${historyRows.length} 段`,
       meta: `${primaryVolcanoName(dashboard.volcano?.name)} / GVP`,
       title: '历史喷发活动',
-      description: '长期喷发历史来自 Smithsonian GVP。',
-      detail: '用于查看基拉韦厄长期喷发活动脉络。',
+      description: 'Smithsonian GVP',
+      detail: 'GVP',
       sourceUrl,
       facts: [
         { label: '数量', value: `${historyRows.length} 段`, tone: 'good' },

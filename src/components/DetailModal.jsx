@@ -41,7 +41,6 @@ export function DetailModal({ detail, onClose }) {
           <div className="detail-modal__title">
             <span>{detail.kicker ?? '关键读数'}</span>
             <h2 id="detail-modal-title">{detail.title ?? detail.label}</h2>
-            <p>{detail.description ?? detail.detail}</p>
           </div>
           <div className="detail-modal__readout">
             <strong>{detail.value ?? '--'}</strong>
@@ -60,14 +59,6 @@ export function DetailModal({ detail, onClose }) {
             ))}
           </div>
         ) : null}
-
-        <div className="detail-modal__statement">
-          <span className="detail-modal__rule" aria-hidden="true" />
-          <div>
-            <strong>{detail.statementTitle ?? '判读'}</strong>
-            <p>{detail.detail}</p>
-          </div>
-        </div>
 
         {detail.sourceUrl ? (
           <a className="detail-modal__source" href={detail.sourceUrl} target="_blank" rel="noreferrer">

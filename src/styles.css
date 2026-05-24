@@ -464,8 +464,8 @@ p {
   right: 0;
   z-index: 120;
   display: grid;
-  width: 236px;
-  gap: 4px;
+  width: 292px;
+  gap: 8px;
   padding: 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   border-radius: var(--radius);
@@ -475,6 +475,37 @@ p {
   box-shadow: var(--popover-shadow);
   backdrop-filter: blur(18px) saturate(1.15);
   animation: menuLift 160ms ease both;
+}
+
+.timezone-search {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.timezone-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.timezone-options {
+  display: grid;
+  max-height: min(420px, 58vh);
+  overflow: auto;
+  gap: 4px;
+  padding-right: 2px;
 }
 
 .timezone-menu button {
@@ -3617,6 +3648,20 @@ p {
   line-height: 1.6;
 }
 
+.decision-note--compact {
+  grid-template-columns: 20px repeat(3, minmax(0, 1fr));
+  align-items: center;
+}
+
+.decision-note--compact span {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .viewing-map-wrap {
   position: relative;
   background: var(--surface-2);
@@ -4062,6 +4107,28 @@ p {
 
 .disclaimer--compact p {
   margin: 6px 0 0;
+}
+
+.source-boundary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.source-boundary span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
 }
 
 .strategy-brief {
@@ -4783,7 +4850,7 @@ p {
   }
 
   .brand-block {
-    min-width: 42px;
+    min-width: 38px;
   }
 
   .nav-section {
@@ -4793,8 +4860,8 @@ p {
   }
 
   .nav-section button {
-    width: 58px;
-    min-height: 48px;
+    width: clamp(42px, 12vw, 50px);
+    min-height: 46px;
     padding: 6px;
   }
 
@@ -4848,8 +4915,8 @@ p {
   }
 
   .top-timebar {
-    flex-wrap: nowrap;
-    overflow-x: visible;
+    flex-wrap: wrap;
+    overflow-x: clip;
     overflow-y: visible;
     scrollbar-width: none;
   }
@@ -4858,6 +4925,10 @@ p {
   .top-timebar > em,
   .timezone-picker {
     flex: 0 0 auto;
+  }
+
+  .top-timebar > em {
+    max-width: 100%;
   }
 
   .timezone-menu {

@@ -187,12 +187,12 @@ export function MapView({
         <div className="map-canvas-wrap">
           <div className="leaflet-map" ref={elementRef} aria-label="夏威夷火山真实地图" />
           <span className={`map-tile-state is-${tileState}`}>
-            {tileState === 'loading' ? '底图加载中' : tileState === 'fallback' ? '备用 OSM 底图' : tileState === 'local' ? '底图降级' : `${layer.label}底图`}
+            {tileState === 'loading' ? '加载中' : tileState === 'fallback' ? 'OSM' : tileState === 'local' ? '本地' : layer.label}
           </span>
           <div className="map-legend" aria-label="地图图例">
-            <span><i className="is-volcano" />火山中心</span>
-            <span><i />USGS 地震</span>
-            <span><i className="is-selected" />当前选中</span>
+            <span><i className="is-volcano" />火山</span>
+            <span><i />USGS</span>
+            <span><i className="is-selected" />选中</span>
           </div>
         </div>
       </section>
@@ -205,14 +205,11 @@ export function MapView({
               <strong>M{getQuakeMagnitude(selectedQuake).toFixed(1)}</strong>
               <span>{getQuakeArea(selectedQuake)}</span>
               <em>{getQuakeDepthKm(selectedQuake).toFixed(1)} km / {formatDateTime(selectedQuake.time, timeZone)}</em>
-              <em>距离火山约 {formatDistanceKm(selected?.distanceKm)}</em>
+              <em>距火山 {formatDistanceKm(selected?.distanceKm)}</em>
             </>
           ) : (
-            <span>半径内暂无地震事件。</span>
+            <span>暂无</span>
           )}
-          <p className="map-note">
-            地震反映近场活动背景，不等同喷发预测。喷发状态以 USGS/HVO 官方通报为准。
-          </p>
         </section>
 
         <section className="panel quake-list-panel">
