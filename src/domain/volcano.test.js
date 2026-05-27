@@ -316,6 +316,26 @@ test('server official episodes classify HVO episode 48 wording as model estimate
   assert.equal(episodes[0].end, '2026-05-25');
 });
 
+test('server official episodes keep HVO forecast-window updates official even when model wording appears later', () => {
+  const episodes = normalizeOfficialEpisodes([
+    {
+      id: 'ep48-official-window',
+      sentUtc: '2026-05-26T19:19:52Z',
+      synopsis: 'Summit has switched to deflation, and forecast window for episode 48 fountains is now pushed to between Wednesday-Friday (May 27-29).',
+      text: 'Forecast models based on summit tilt and seismic velocity indicate that episode 48 fountains are most likely between Wednesday and Friday (May 27-29), but ongoing deflation may push that window out further. The forecast window may change as more data are incorporated into the models.',
+      url: 'https://example.com/ep48-official-window',
+    },
+  ]);
+
+  assert.deepEqual(episodes.map((item) => item.episodeNumber), [48]);
+  assert.equal(episodes[0].sourceType, 'official');
+  assert.equal(episodes[0].status, 'Forecast window');
+  assert.equal(episodes[0].windowKind, 'forecast');
+  assert.equal(episodes[0].start, '2026-05-27');
+  assert.equal(episodes[0].end, '2026-05-29');
+  assert.equal(episodes[0].windowLabel, 'May 27 - May 29, 2026');
+});
+
 test('server official episodes expose observed current-sequence EP records without relabeling older history', () => {
   const episodes = normalizeOfficialEpisodes([
     {

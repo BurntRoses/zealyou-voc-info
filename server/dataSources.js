@@ -808,6 +808,20 @@ function extractOfficialWindow(text, sentUtc) {
   const value = String(text ?? "").replace(/[\u2010-\u2015\u2212]/g, "-");
   const fallbackYear =
     safeInteger(String(sentUtc ?? "").slice(0, 4)) ?? new Date().getUTCFullYear();
+  const parentheticalRange = value.match(
+    /\(\s*([A-Z][a-z]+)\s+(\d{1,2})\s*-\s*(?:([A-Z][a-z]+)\s+)?(\d{1,2})(?:,?\s*(\d{4}))?\s*\)/,
+  );
+  if (parentheticalRange) {
+    const startMonth = parentheticalRange[1];
+    const endMonth = parentheticalRange[3] ?? startMonth;
+    const year = parentheticalRange[5] ?? fallbackYear;
+    return {
+      label: `${startMonth} ${parentheticalRange[2]} - ${endMonth} ${parentheticalRange[4]}, ${year}`,
+      start: isoDateFromParts(startMonth, parentheticalRange[2], year),
+      end: isoDateFromParts(endMonth, parentheticalRange[4], year),
+    };
+  }
+
   const sameMonth = value.match(
     /\b([A-Z][a-z]+)\s+(\d{1,2})\s*-\s*(?:([A-Z][a-z]+)\s+)?(\d{1,2}),?\s*(\d{4})\b/,
   );
@@ -847,6 +861,11 @@ function extractOfficialWindow(text, sentUtc) {
   }
 
   return null;
+}
+
+function hasOfficialForecastWindowContext(text) {
+  const value = String(text ?? "");
+  return /\bforecast\s+window\b[^.\n]{0,240}\b(?:episode|fountain|fountaining|onset|pushed|between|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|\d{1,2}\s*-\s*\d{1,2})\b/i.test(value);
 }
 
 function extractObservedEpisodeWindow(text, episodeNumber, sentUtc) {
@@ -951,16 +970,17 @@ export function normalizeOfficialEpisodes(notices) {
     const episodeNumber = extractEpisodeNumber(text);
     if (!episodeNumber) continue;
 
-    const forecastContext = /forecast\s+window|\bforecast\s+models?\b|\bmodels?\s+suggest\b|\bonset\b|\bexpected\b|\blikely\b|\bwill\s+occur\b|\bmost\s+likely\b/i.test(text);
+    const officialForecastWindowContext = hasOfficialForecastWindowContext(text);
+    const forecastContext = officialForecastWindowContext || /forecast\s+window|\bforecast\s+models?\b|\bmodels?\s+suggest\b|\bonset\b|\bexpected\b|\blikely\b|\bwill\s+occur\b|\bmost\s+likely\b/i.test(text);
     const forecastWindow = forecastContext ? extractOfficialWindow(text, notice?.sentUtc) : null;
     const observedWindow = forecastWindow
       ? null
       : extractObservedEpisodeWindow(text, episodeNumber, notice?.sentUtc);
     const window = forecastWindow ?? observedWindow;
     const paused = /\bpaused\b/i.test(text);
-    const modelEstimate = /\bforecast models?\b|\bmodels?\s+suggest\b/i.test(text);
+    const modelEstimate = !officialForecastWindowContext && /\bforecast models?\b|\bmodels?\s+suggest\b/i.test(text);
     const forecast = Boolean(forecastWindow) || forecastContext;
-    const observedOnly = Boolean(observedWindow && !forecastWindow && !modelEstimate);
+    const observedOnly = Boolean(observedWindow && !forecastWindow && !forecastContext && !modelEstimate);
     const episode = {
       id: `hans-${notice?.id ?? notice?.sentUnixtime ?? episodeNumber}-episode-${episodeNumber}`,
       episodeNumber,
